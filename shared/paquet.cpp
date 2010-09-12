@@ -104,3 +104,9 @@ bool Paquet::send(QTcpSocket *socket)
         return false;
 }
 
+void Paquet::clear()
+{
+    m_stream.device()->seek(0);
+    m_paquet.clear();
+    m_stream << (quint16) 0;
+}

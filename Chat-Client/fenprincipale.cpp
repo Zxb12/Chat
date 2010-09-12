@@ -243,3 +243,37 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
     }
 }
 
+void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
+{
+    switch (opCode)
+    {
+    case SMSG_USER_JOINED:
+        {
+            QString pseudo;
+            *in >> pseudo;
+
+            CHAT("<em>" + pseudo + " s'est joint au Chat.</em>");
+            break;
+        }
+    case SMSG_USER_LEFT:
+        {
+            QString pseudo;
+            *in >> pseudo;
+
+            CHAT("<em>" + pseudo + " a quitté le Chat.</em>");
+            break;
+        }
+    case SMSG_USER_RENAMED:
+        {
+            QString ancienPseudo, nouveauPseudo;
+            *in >> ancienPseudo;
+            *in >> nouveauPseudo;
+
+            CHAT("<em>" + ancienPseudo + " s'appelle maintenant " + nouveauPseudo + ".</em>");
+            break;
+        }
+    default:
+        CONSOLE("ERREUR: Paquet non géré dans handleUserModification");
+        break;
+    }
+}

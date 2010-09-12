@@ -1,7 +1,7 @@
 #ifndef SHARED_H
 #define SHARED_H
 
-#define NB_OPCODES 0x0d
+#define NB_OPCODES 0x10
 
 enum OpCodeValues
 {
@@ -18,7 +18,9 @@ enum OpCodeValues
     SMSG_CHAT_MESSAGE               = 0x0a,
     SMSG_INVALID_MESSAGE            = 0x0b,
     SMSG_NAME_NOT_SET               = 0x0c,
-
+    SMSG_USER_JOINED                = 0x0d,
+    SMSG_USER_LEFT                  = 0x0e,
+    SMSG_USER_RENAMED               = 0x0f,
 };
 
 #endif // SHARED_H

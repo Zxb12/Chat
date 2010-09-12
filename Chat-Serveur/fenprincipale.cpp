@@ -58,6 +58,15 @@ void FenPrincipale::decoClient()
 
     CONSOLE("Un client s'est déconnecté.");
 
+    //On envoie le message de déconnexion à tous si la personne a un pseudo.
+    if (!client->getPseudo().isEmpty())
+    {
+        Paquet out;
+        out << SMSG_USER_LEFT;
+        out << client->getPseudo();
+        envoyerATous(out);
+    }
+
     //On le supprime de la liste de clients
     m_clients.removeOne(client);
 
@@ -68,14 +77,10 @@ void FenPrincipale::decoClient()
 void FenPrincipale::kickClient(Client *client)
 {
     CONSOLE("Le client " + client->getSocket()->peerAddress().toString() + " a été kické.");
-    QByteArray paquet;
-    QDataStream out(&paquet, QIODevice::WriteOnly);
-
-    out << (quint16) sizeof SMSG_KICK ;
+    Paquet out;
     out << SMSG_KICK;
-
-    client->getSocket()->write(paquet);
-    client->getSocket()->close();
+    out.send(client->getSocket());
+    client->getSocket()->disconnectFromHost();
 }
 
 void FenPrincipale::paquetRecu(Paquet *in)
@@ -138,6 +143,7 @@ void FenPrincipale::handleServerSide(Paquet* in, Client* client)
     CONSOLE("Paquet reçu avec un opCode de serveur.");
 }
 
+//OpCode reçu lors de la première connexion du client.
 void FenPrincipale::handleAuthSetName(Paquet* in, Client* client)
 {
     QString pseudo;
@@ -182,16 +188,22 @@ void FenPrincipale::handleAuthSetName(Paquet* in, Client* client)
     Paquet out;
     out << SMSG_AUTH_OK;
     out << pseudo;
-
     out.send(client->getSocket());
+
+    out.clear();
+    out << SMSG_USER_JOINED;
+    out << pseudo;
+    envoyerATous(out);
+
     return;
 
 }
 
 void FenPrincipale::handleAuthRename(Paquet *in, Client *client)
 {
-    QString pseudo;
+    QString pseudo, ancienPseudo;
     *in >> pseudo;
+    ancienPseudo = client->getPseudo();
 
     pseudo = pseudo.simplified();
 
@@ -228,8 +240,13 @@ void FenPrincipale::handleAuthRename(Paquet *in, Client *client)
     Paquet out;
     out << SMSG_AUTH_OK;
     out << pseudo;
-
     out.send(client->getSocket());
+
+    out.clear();
+    out << SMSG_USER_RENAMED;
+    out << ancienPseudo << pseudo;
+    envoyerATous(out);
+
     return;
 
 }

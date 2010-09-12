@@ -14,5 +14,8 @@ OpCodeHandler OpCodeTable[NB_OPCODES] =
     {"CMSG_CHAT_MESSAGE", &FenPrincipale::handleClientSide},
     {"SMSG_CHAT_MESSAGE", &FenPrincipale::handleChat},
     {"SMSG_INVALID_MESSAGE", &FenPrincipale::handleChat},
-    {"SMSG_NAME_NOT_SET", &FenPrincipale::handleChat}
+    {"SMSG_NAME_NOT_SET", &FenPrincipale::handleChat},
+    {"SMSG_USER_JOINED", &FenPrincipale::handleUserModification},
+    {"SMSG_USER_LEFT", &FenPrincipale::handleUserModification},
+    {"SMSG_USER_RENAMED", &FenPrincipale::handleUserModification},
 };

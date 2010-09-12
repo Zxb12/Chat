@@ -31,7 +31,7 @@ public:
     //Envoie le paquet préparé à la socket.
     //Doit calculer la taille du paquet avant.
     bool send(QTcpSocket*);
-    void clear() { m_stream.device()->readAll(); }
+    void clear();
 
 private:
     QByteArray m_paquet;
