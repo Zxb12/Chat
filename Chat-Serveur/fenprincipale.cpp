@@ -80,9 +80,6 @@ void FenPrincipale::kickClient(Client *client)
 
 void FenPrincipale::paquetRecu(Paquet *in)
 {
-//    //On extrait le paquet de la socket
-//    Paquet *in = new Paquet(stream->device()->readAll());
-//
     //On détermine d'où vient le paquet
     Client *client = qobject_cast<Client *>(sender());
 
@@ -110,7 +107,7 @@ void FenPrincipale::paquetRecu(Paquet *in)
 
     OpCodeHandler handler = OpCodeTable[opCode];
 
-    CONSOLE("Paquet reçu: " + handler.nom);
+    CONSOLE("Paquet reçu: " + handler.nom + "(" + QString::number(opCode) + ")");
 
     //Lancement de la fonction associée.
     (this->*handler.f)(in, client);

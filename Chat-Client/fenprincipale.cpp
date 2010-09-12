@@ -165,7 +165,7 @@ void FenPrincipale::paquetRecu(Paquet *in)
 
     OpCodeHandler handler = OpCodeTable[opCode];
 
-    CONSOLE("Paquet reçu: " + handler.nom);
+    CONSOLE("Paquet reçu: " + handler.nom + "(" + QString::number(opCode) + ")");
 
     //Lancement de la fonction associée.
     (this->*handler.f)(in, opCode);
