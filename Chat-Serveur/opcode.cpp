@@ -5,6 +5,7 @@ OpCodeHandler OpCodeTable[NB_OPCODES] =
     {"CMSG_HELLO", &FenPrincipale::handleHello},
     {"SMSG_HELLO", &FenPrincipale::handleServerSide},
     {"CMSG_AUTH_SET_NAME", &FenPrincipale::handleAuthSetName},
+    {"CMSG_AUTH_RENAME", &FenPrincipale::handleAuthRename},
     {"SMSG_AUTH_OK", &FenPrincipale::handleServerSide},
     {"SMSG_AUTH_NAME_ALREADY_IN_USE", &FenPrincipale::handleServerSide},
     {"SMSG_AUTH_IP_BANNED", &FenPrincipale::handleServerSide},

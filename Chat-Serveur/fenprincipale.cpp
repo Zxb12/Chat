@@ -146,18 +146,59 @@ void FenPrincipale::handleAuthSetName(Paquet* in, Client* client)
     QString pseudo;
     *in >> pseudo;
 
-    CONSOLE("Un client s'appelle " + pseudo);
+    pseudo = pseudo.simplified();
 
-    bool utilise = false;
+    //Vérifie la taille du pseudo
+    if (pseudo.size() < TAILLE_PSEUDO_MIN)
+    {
+        CONSOLE("ERREUR: Nommage impossible, pseudo trop court.");
+        Paquet out;
+        out << SMSG_AUTH_NAME_TOO_SHORT;
+        out.send(client->getSocket());
+
+        kickClient(client);
+
+        return;
+    }
+
+    //Vérifie si le pseudo est déjà utilisé
     foreach(Client* i_client, m_clients)
     {
         if (i_client->getPseudo() == pseudo)
         {
-            utilise = true;
-            break;
+            CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
+
+            Paquet out;
+            out << SMSG_AUTH_NAME_ALREADY_IN_USE;
+            out.send(client->getSocket());
+
+            kickClient(client);
+
+            return;
         }
     }
 
+    //Renommage du client
+    CONSOLE("Client nommé: " + pseudo);
+    client->setPseudo(pseudo);
+
+    Paquet out;
+    out << SMSG_AUTH_OK;
+    out << pseudo;
+
+    out.send(client->getSocket());
+    return;
+
+}
+
+void FenPrincipale::handleAuthRename(Paquet *in, Client *client)
+{
+    QString pseudo;
+    *in >> pseudo;
+
+    pseudo = pseudo.simplified();
+
+    //Vérifie la taille du pseudo
     if (pseudo.size() < TAILLE_PSEUDO_MIN)
     {
         CONSOLE("ERREUR: Nommage impossible, pseudo trop court.");
@@ -168,34 +209,40 @@ void FenPrincipale::handleAuthSetName(Paquet* in, Client* client)
         return;
     }
 
-    if (utilise)
+    //Vérifie si le pseudo est déjà utilisé
+    foreach(Client* i_client, m_clients)
     {
-        CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
+        if (i_client->getPseudo() == pseudo)
+        {
+            CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
 
-        Paquet out;
-        out << SMSG_AUTH_NAME_ALREADY_IN_USE;
-        out.send(client->getSocket());
+            Paquet out;
+            out << SMSG_AUTH_NAME_ALREADY_IN_USE;
+            out.send(client->getSocket());
 
-        return;
+            return;
+        }
     }
-    else
-    {
-        CONSOLE("Client nommé: " + pseudo);
-        client->setPseudo(pseudo);
 
-        Paquet out;
-        out << SMSG_AUTH_OK;
-        out << pseudo;
+    //Renommage du client
+    CONSOLE("Client nommé: " + pseudo);
+    client->setPseudo(pseudo);
 
-        out.send(client->getSocket());
-        return;
-    }
+    Paquet out;
+    out << SMSG_AUTH_OK;
+    out << pseudo;
+
+    out.send(client->getSocket());
+    return;
+
 }
 
 void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
 {
     QString message;
     *in >> message;
+
+    message = message.simplified();
 
     //On vérifie si le message n'est pas vide.
     if (message.isEmpty())

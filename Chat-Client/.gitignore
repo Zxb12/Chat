@@ -1,4 +1,5 @@
 debug/
 release/
 Chat.pro.user
-
+Makefile*
+ui_*

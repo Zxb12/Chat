@@ -14,7 +14,9 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
     connect(m_socket, SIGNAL(disconnected()), this, SLOT(deconnecte()));
     connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(erreurSocket(QAbstractSocket::SocketError)));
 
-    QString ool = "<em>Putain !</em> <strong>Ca ne marche pas!</strong>";
+    ui->chat->setEnabled(false);
+    ui->message->setEnabled(false);
+    ui->envoyer->setEnabled(false);
 }
 
 FenPrincipale::~FenPrincipale()
@@ -101,12 +103,24 @@ void FenPrincipale::connecte()
 {
     CONSOLE("Connexion réussie !");
     ui->connecter->setEnabled(true);
+
+    //On demande au serveur de nous attribuer un pseudo.
+    Paquet out;
+    out << CMSG_AUTH_SET_NAME;
+    out << ui->pseudo->text();
+
+    out.send(m_socket);
+
 }
 
 // Ce slot est appelé lorsqu'on est déconnecté du serveur
 void FenPrincipale::deconnecte()
 {
     CONSOLE("Déconnecté du serveur");
+    m_pseudo.clear();
+    ui->chat->setEnabled(false);
+    ui->message->setEnabled(false);
+    ui->envoyer->setEnabled(false);
 }
 
 // Ce slot est appelé lorsqu'il y a une erreur
@@ -184,6 +198,10 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
         break;
     case SMSG_AUTH_OK:
         CHAT("Authentification réussie.");
+
+        ui->chat->setEnabled(true);
+        ui->message->setEnabled(true);
+        ui->envoyer->setEnabled(true);
         
         break;
     default:

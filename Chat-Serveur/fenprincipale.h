@@ -32,6 +32,7 @@ public:
     void handleServerSide(Paquet*, Client*);
     void handleHello(Paquet*, Client*);
     void handleAuthSetName(Paquet*, Client*);
+    void handleAuthRename(Paquet*, Client*);
     void handleChatMessage(Paquet*, Client*);
 
 
