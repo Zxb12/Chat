@@ -15,7 +15,7 @@ Client::~Client()
 
 void Client::donneesRecues()
 {
-    QDataStream in(m_socket);
+    QDataStream stream(m_socket);
 
     //Récupération de la taille du paquet
     if (m_taillePaquet == 0)
@@ -23,18 +23,25 @@ void Client::donneesRecues()
         if (m_socket->bytesAvailable() < sizeof m_taillePaquet)
             return;
 
-        in >> m_taillePaquet;
+        stream >> m_taillePaquet;
     }
 
     //Récupération du reste du paquet
     if (m_socket->bytesAvailable() < m_taillePaquet)
         return;
 
+    //On lit la socket pour la taille d'un paquet et on stocke.
+    Paquet *in = new Paquet(m_socket->read(m_taillePaquet));
+
     //Remise à zéro de la taille du paquet
     m_taillePaquet = 0;
 
     //On envoie le paquet reçu
-    emit paquetRecu(&in);
+    emit paquetRecu(in);
+
+    //S'il nous reste quelque chose dans la socket, on relance la fonction.
+    if (m_socket->bytesAvailable())
+        donneesRecues();
 }
 
 void Client::deconnexion()

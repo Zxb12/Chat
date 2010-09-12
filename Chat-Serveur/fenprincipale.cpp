@@ -40,7 +40,7 @@ void FenPrincipale::nouvelleConnexion()
     Client *nouveauClient = new Client(m_serveur->nextPendingConnection());
     connect(nouveauClient, SIGNAL(deconnecte()), this, SLOT(decoClient()));
     connect(nouveauClient, SIGNAL(console(QString)), this, SLOT(console(QString)));
-    connect(nouveauClient, SIGNAL(paquetRecu(QDataStream*)), this, SLOT(paquetRecu(QDataStream*)));
+    connect(nouveauClient, SIGNAL(paquetRecu(Paquet*)), this, SLOT(paquetRecu(Paquet*)));
 
     //On ajoute le client à la liste
     m_clients << nouveauClient;
@@ -78,11 +78,11 @@ void FenPrincipale::kickClient(Client *client)
     client->getSocket()->close();
 }
 
-void FenPrincipale::paquetRecu(QDataStream *stream)
+void FenPrincipale::paquetRecu(Paquet *in)
 {
-    //On extrait le paquet de la socket
-    Paquet *in = new Paquet(stream->device()->readAll());
-
+//    //On extrait le paquet de la socket
+//    Paquet *in = new Paquet(stream->device()->readAll());
+//
     //On détermine d'où vient le paquet
     Client *client = qobject_cast<Client *>(sender());
 

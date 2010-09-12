@@ -70,32 +70,33 @@ void FenPrincipale::on_message_returnPressed()
 // On a reçu un paquet (ou un sous-paquet)
 void FenPrincipale::donneesRecues()
 {
-    /* Même principe que lorsque le serveur reçoit un paquet :
-    On essaie de récupérer la taille du message
-    Une fois qu'on l'a, on attend d'avoir reçu le message entier (en se basant sur la taille annoncée m_taillePaquet)
-    */
-
     QDataStream stream(m_socket);
 
-
+    //Récupération de la taille du paquet
     if (m_taillePaquet == 0)
     {
-        if (m_socket->bytesAvailable() < (int)sizeof(quint16))
+        if (m_socket->bytesAvailable() < sizeof m_taillePaquet)
             return;
 
         stream >> m_taillePaquet;
     }
 
+    //Récupération du reste du paquet
     if (m_socket->bytesAvailable() < m_taillePaquet)
         return;
 
-    //On remet la taille à zéro pour le paquet suivant.
+    //On lit la socket pour la taille d'un paquet et on stocke.
+    Paquet *in = new Paquet(m_socket->read(m_taillePaquet));
+
+    //Remise à zéro de la taille du paquet
     m_taillePaquet = 0;
 
-    Paquet *in = new Paquet(m_socket->readAll());
+    //On envoie le paquet reçu
+    emit paquetRecu(in);
 
-    // Si on arrive jusqu'à cette ligne, on peut récupérer le message entier
-    paquetRecu(in);
+    //S'il nous reste quelque chose dans la socket, on relance la fonction.
+    if (m_socket->bytesAvailable())
+        donneesRecues();
 }
 
 // Ce slot est appelé lorsque la connexion au serveur a réussi

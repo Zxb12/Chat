@@ -43,7 +43,7 @@ public slots:
     void decoClient();
     void kickClient(Client *);
 
-    void paquetRecu(QDataStream*);
+    void paquetRecu(Paquet*);
 
 private:
     Ui::FenPrincipale *ui;

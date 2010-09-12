@@ -29,7 +29,7 @@ public:
 signals:
     void deconnecte();
     void console(QString);
-    void paquetRecu(QDataStream*);
+    void paquetRecu(Paquet*);
 
 public slots:
     void donneesRecues();
