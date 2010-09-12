@@ -227,8 +227,11 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
         break;
     case SMSG_CHAT_MESSAGE:
         {
-            QString message;
+            QString pseudo, message;
+            *in >> pseudo;
             *in >> message;
+
+            message = "<strong>&lt;" + pseudo + "&gt;</strong> " + message;
 
             CHAT(message);
         }

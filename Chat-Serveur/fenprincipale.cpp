@@ -266,7 +266,8 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
     //Préparation du paquet
     Paquet out;
     out << SMSG_CHAT_MESSAGE;
-    out << "<strong>" + client->getPseudo() + "</strong> " + message;
+    out << client->getPseudo();
+    out << message;
 
     envoyerATous(out);
 }
