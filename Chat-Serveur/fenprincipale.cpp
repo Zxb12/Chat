@@ -167,7 +167,7 @@ void FenPrincipale::handleAuthSetName(Paquet* in, Client* client)
     //Vérifie si le pseudo est déjà utilisé
     foreach(Client* i_client, m_clients)
     {
-        if (i_client->getPseudo() == pseudo)
+        if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == 0)
         {
             CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
 
@@ -221,7 +221,7 @@ void FenPrincipale::handleAuthRename(Paquet *in, Client *client)
     //Vérifie si le pseudo est déjà utilisé
     foreach(Client* i_client, m_clients)
     {
-        if (i_client->getPseudo() == pseudo)
+        if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == 0)
         {
             CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
 
