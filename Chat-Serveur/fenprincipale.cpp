@@ -21,6 +21,24 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
         ui->etatServeur->setText("Serveur démarré sur le port : <strong>" + QString::number(m_serveur->serverPort()) + "</strong>");
         connect(m_serveur, SIGNAL(newConnection()), this, SLOT(nouvelleConnexion()));
     }
+    connecterBDD();
+}
+
+void FenPrincipale::connecterBDD()
+{
+    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+    db.setHostName("127.0.0.1");
+    db.setDatabaseName("chat");
+    bool ok = db.open("chat", "chat");
+    if (ok)
+    {
+        CONSOLE("Connexion réussie à la BDD");
+    }
+    else
+    {
+        CONSOLE("Connexion échouée.");
+        return;
+    }
 }
 
 FenPrincipale::~FenPrincipale()
@@ -255,6 +273,7 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
 {
     QString message;
     *in >> message;
+    QString pseudo = client->getPseudo();
 
     //Traitement du message
     message = message.simplified();
@@ -271,7 +290,7 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
     }
 
     //On vérifie que le client a un pseudo.
-    if (client->getPseudo().isEmpty())
+    if (pseudo.isEmpty())
     {
         Paquet out;
         out << SMSG_NAME_NOT_SET;
@@ -283,8 +302,18 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
     //Préparation du paquet
     Paquet out;
     out << SMSG_CHAT_MESSAGE;
-    out << client->getPseudo();
+    out << pseudo;
     out << message;
 
     envoyerATous(out);
+
+    //Archivage dans la BDD
+    QSqlQuery query;
+    query.prepare("INSERT INTO chat_history (name, message, date) "
+                  "VALUES (:name, :message, :date)");
+    query.bindValue(":name", pseudo);
+    query.bindValue(":message", message);
+    query.bindValue(":date", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss:zzz"));
+    query.exec();
+
 }

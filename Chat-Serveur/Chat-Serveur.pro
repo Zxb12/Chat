@@ -1,7 +1,8 @@
 # -------------------------------------------------
 # Project created by QtCreator 2010-08-25T18:25:52
 # -------------------------------------------------
-QT += network
+QT += network \
+    sql
 TARGET = Chat-Serveur
 TEMPLATE = app
 SOURCES += main.cpp \

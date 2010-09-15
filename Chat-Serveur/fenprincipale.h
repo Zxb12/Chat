@@ -10,6 +10,8 @@
 #include <QTime>
 #include <QDataStream>
 
+#include <QtSql>
+
 #include "opcode.h"
 #include "../shared/paquet.h"
 #include "client.h"
@@ -27,6 +29,7 @@ public:
     ~FenPrincipale();
 
     void envoyerATous(Paquet&);
+    void connecterBDD();
 
     //Handlers des opCodes reçus.
     void handleServerSide(Paquet*, Client*);
