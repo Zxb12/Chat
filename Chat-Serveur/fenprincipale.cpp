@@ -26,18 +26,34 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
 
 void FenPrincipale::connecterBDD()
 {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
-    db.setHostName("127.0.0.1");
-    db.setDatabaseName("chat");
-    bool ok = db.open("chat", "chat");
-    if (ok)
+    QFile confFile("server.conf");
+    if (confFile.open(QIODevice::ReadOnly))
     {
-        CONSOLE("Connexion réussie à la BDD");
+
+        //Chargement depuis le fichier.
+        QString address = QString(confFile.readLine()).remove("SQL_ADDRESS=").remove("\r\n");
+        QString database = QString(confFile.readLine()).remove("SQL_DATABASE=").remove("\r\n");
+        QString login = QString(confFile.readLine()).remove("SQL_LOGIN=").remove("\r\n");
+        QString pass = QString(confFile.readLine()).remove("SQL_PASSWORD=").remove("\r\n");
+
+        //Ouverture de la BDD
+        QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+        db.setHostName(address);
+        db.setDatabaseName(database);
+        bool ok = db.open(login, pass);
+        if (ok)
+        {
+            CONSOLE("Connexion réussie à la BDD");
+        }
+        else
+        {
+            CONSOLE("Connexion échouée à la BDD: " + db.lastError().text());
+            return;
+        }
     }
     else
     {
-        CONSOLE("Connexion échouée.");
-        return;
+        CONSOLE("Impossible d'ouvrir server.conf");
     }
 }
 

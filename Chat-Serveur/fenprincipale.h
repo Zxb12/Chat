@@ -11,6 +11,7 @@
 #include <QDataStream>
 
 #include <QtSql>
+#include <QFile>
 
 #include "opcode.h"
 #include "../shared/paquet.h"
