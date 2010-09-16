@@ -21,6 +21,40 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
         ui->etatServeur->setText("Serveur démarré sur le port : <strong>" + QString::number(m_serveur->serverPort()) + "</strong>");
         connect(m_serveur, SIGNAL(newConnection()), this, SLOT(nouvelleConnexion()));
     }
+    connecterBDD();
+}
+
+void FenPrincipale::connecterBDD()
+{
+    QFile confFile("server.conf");
+    if (confFile.open(QIODevice::ReadOnly))
+    {
+
+        //Chargement depuis le fichier.
+        QString address = QString(confFile.readLine()).remove("SQL_ADDRESS=").remove("\r\n");
+        QString database = QString(confFile.readLine()).remove("SQL_DATABASE=").remove("\r\n");
+        QString login = QString(confFile.readLine()).remove("SQL_LOGIN=").remove("\r\n");
+        QString pass = QString(confFile.readLine()).remove("SQL_PASSWORD=").remove("\r\n");
+
+        //Ouverture de la BDD
+        QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+        db.setHostName(address);
+        db.setDatabaseName(database);
+        bool ok = db.open(login, pass);
+        if (ok)
+        {
+            CONSOLE("Connexion réussie à la BDD");
+        }
+        else
+        {
+            CONSOLE("Connexion échouée à la BDD: " + db.lastError().text());
+            return;
+        }
+    }
+    else
+    {
+        CONSOLE("Impossible d'ouvrir server.conf");
+    }
 }
 
 FenPrincipale::~FenPrincipale()
@@ -255,6 +289,7 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
 {
     QString message;
     *in >> message;
+    QString pseudo = client->getPseudo();
 
     //Traitement du message
     message = message.simplified();
@@ -271,7 +306,7 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
     }
 
     //On vérifie que le client a un pseudo.
-    if (client->getPseudo().isEmpty())
+    if (pseudo.isEmpty())
     {
         Paquet out;
         out << SMSG_NAME_NOT_SET;
@@ -283,10 +318,20 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
     //Préparation du paquet
     Paquet out;
     out << SMSG_CHAT_MESSAGE;
-    out << client->getPseudo();
+    out << pseudo;
     out << message;
 
     envoyerATous(out);
+
+    //Archivage dans la BDD
+    QSqlQuery query;
+    query.prepare("INSERT INTO chat_history (name, message, date) "
+                  "VALUES (:name, :message, :date)");
+    query.bindValue(":name", pseudo);
+    query.bindValue(":message", message);
+    query.bindValue(":date", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss:zzz"));
+    query.exec();
+
 }
 
 void FenPrincipale::handlePing(Paquet *in, Client *client)
