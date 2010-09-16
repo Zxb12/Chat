@@ -18,4 +18,7 @@ OpCodeHandler OpCodeTable[NB_OPCODES] =
     {"SMSG_USER_JOINED", &FenPrincipale::handleServerSide},
     {"SMSG_USER_LEFT", &FenPrincipale::handleServerSide},
     {"SMSG_USER_RENAMED", &FenPrincipale::handleServerSide},
+    {"SMSG_PING", &FenPrincipale::handleServerSide},
+    {"CMSG_PONG", &FenPrincipale::handlePing},
+
 };

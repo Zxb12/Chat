@@ -2,15 +2,19 @@
 
 #define CONSOLE(a) emit console(a)
 
-Client::Client(QTcpSocket *socket) : m_socket(socket), m_taillePaquet(0), m_pseudo("")
+Client::Client(QTcpSocket *socket) : m_socket(socket), m_taillePaquet(0), m_pseudo(""), m_pingsPending(0), m_ping(0)
 {
     connect(m_socket, SIGNAL(readyRead()), this, SLOT(donneesRecues()));
     connect(m_socket, SIGNAL(disconnected()), this, SLOT(deconnexion()));
+
+    //Création du timer pour le lancement des pings.
+    m_pingTimer = new QTimer(this);
+    connect(m_pingTimer, SIGNAL(timeout()), this, SLOT(sendPing()));
+    m_pingTimer->start(10000);
 }
 
 Client::~Client()
 {
-
 }
 
 void Client::donneesRecues()
@@ -47,4 +51,22 @@ void Client::donneesRecues()
 void Client::deconnexion()
 {
     emit deconnecte();
+}
+
+void Client::sendPing()
+{
+    //On stocke le nombre de millisecondes jusqu'à minuit.
+    QTime time;
+    Paquet out;
+    out << SMSG_PING;
+    out << quint32(time.msecsTo(QTime::currentTime()));
+    out.send(m_socket);
+
+    m_pingsPending++;
+
+    if (m_pingsPending > 3)
+    {
+        CONSOLE(m_pseudo + " a été kické pour ping timeout.");
+        m_socket->abort();
+    }
 }

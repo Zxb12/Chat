@@ -34,6 +34,7 @@ public:
     void handleAuthSetName(Paquet*, Client*);
     void handleAuthRename(Paquet*, Client*);
     void handleChatMessage(Paquet*, Client*);
+    void handlePing(Paquet*, Client*);
 
 
 public slots:

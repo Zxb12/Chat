@@ -39,6 +39,7 @@ public:
     void handleKick(Paquet*, quint16);
     void handleChat(Paquet*, quint16);
     void handleUserModification(Paquet*, quint16);
+    void handlePing(Paquet*, quint16);
 
 private:
     Ui::FenPrincipale *ui;

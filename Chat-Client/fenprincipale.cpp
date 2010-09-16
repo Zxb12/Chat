@@ -277,3 +277,13 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
         break;
     }
 }
+void FenPrincipale::handlePing(Paquet *in, quint16 opCode)
+{
+    quint32 time;
+    *in >> time;
+
+    Paquet out;
+    out << CMSG_PONG;
+    out << time;
+    out.send(m_socket);
+}

@@ -288,3 +288,20 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
 
     envoyerATous(out);
 }
+
+void FenPrincipale::handlePing(Paquet *in, Client *client)
+{
+    //On a reçu un ping, on remet le décompte de kick à 0
+    client->setPingsPending(0);
+
+    quint32 diff;
+    *in >> diff;
+
+    QTime time(0, 0);
+    time = time.addMSecs(diff);
+
+    diff = time.msecsTo(QTime::currentTime());
+    CONSOLE(client->getPseudo() + ": ping " + QString::number(diff) + " ms");
+
+    client->setPing(diff);
+}
