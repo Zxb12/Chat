@@ -3,6 +3,7 @@
 
 #define PORT_SERVEUR        50180
 #define TAILLE_PSEUDO_MIN   4
+#define TAILLE_COMPTE_MIN   4
 
 #include <QWidget>
 #include <QTcpServer>
@@ -39,6 +40,7 @@ public:
     void handleSetNick(Paquet*, Client*);
     void handleChatMessage(Paquet*, Client*);
     void handlePing(Paquet*, Client*);
+    void handleRegister(Paquet*, Client*);
 
 
 public slots:

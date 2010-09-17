@@ -1,7 +1,7 @@
 #ifndef SHARED_H
 #define SHARED_H
 
-#define NB_OPCODES 0x16
+#define NB_OPCODES 0x1b
 
 enum OpCodeValues
 {
@@ -27,6 +27,11 @@ enum OpCodeValues
     SMSG_USER_RENAMED               = 0x13,
     SMSG_PING                       = 0x14,
     CMSG_PONG                       = 0x15,
+    CMSG_REGISTER                   = 0x16,
+    SMSG_REG_OK                     = 0x17,
+    SMSG_REG_ACCT_ALREADY_EXISTS    = 0x18,
+    SMSG_REG_INVALID_NICK           = 0x19,
+    SMSG_REG_ERROR                  = 0x1a,
 };
 
 #endif // SHARED_H

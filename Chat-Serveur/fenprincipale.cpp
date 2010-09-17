@@ -187,7 +187,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     *in >> pwhash;
     *in >> pseudo;
 
-    login = login.toUpper();
+    login = login.simplified().toUpper();
     pwhash = pwhash.toHex();
     pseudo = pseudo.simplified();
 
@@ -291,7 +291,6 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
         Paquet out;
         out << SMSG_NICK_TOO_SHORT;
         out.send(client->getSocket());
-
         return;
     }
 
@@ -301,11 +300,9 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
         if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == 0)
         {
             CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
-
             Paquet out;
             out << SMSG_NICK_ALREADY_IN_USE;
             out.send(client->getSocket());
-
             return;
         }
     }
@@ -388,4 +385,68 @@ void FenPrincipale::handlePing(Paquet *in, Client *client)
     CONSOLE(client->getPseudo() + ": ping " + QString::number(diff) + " ms");
 
     client->setPing(diff);
+}
+
+void FenPrincipale::handleRegister(Paquet *in, Client *client)
+{
+    QString login;
+    QByteArray pwhash;
+
+    *in >> login;
+    *in >> pwhash;
+
+    //Traitement des données
+    login = login.simplified().toUpper();
+    pwhash = pwhash.toHex();
+
+    //Vérification de la taille du login
+    if (login.size() < TAILLE_COMPTE_MIN)
+    {
+        Paquet out;
+        out << SMSG_REG_INVALID_NICK;
+        out.send(client->getSocket());
+        return;
+    }
+
+    //Vérification des doublons.
+    QSqlQuery query;
+    query.prepare("SELECT * FROM account WHERE login = :login");
+    query.bindValue(":login", login);
+    if (!query.exec())
+    {
+        //Erreur de requête.
+        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        Paquet out;
+        out << SMSG_REG_ERROR;
+        out.send(client->getSocket());
+        return;
+    }
+
+    //Si on a trouvé un compte portant ce nom, on arrête
+    if (query.next())
+    {
+        Paquet out;
+        out << SMSG_REG_ACCT_ALREADY_EXISTS;
+        out.send(client->getSocket());
+        return;
+    }
+
+    //Insersion dans la base de données.
+    query.prepare("INSERT INTO account (login, pwhash) VALUES (:login, :pwhash)");
+    query.bindValue(":login", login);
+    query.bindValue(":pwhash", pwhash);
+    if (!query.exec())
+    {
+        //Erreur de requête.
+        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        Paquet out;
+        out << SMSG_REG_ERROR;
+        out.send(client->getSocket());
+        return;
+    }
+
+    CONSOLE("Nouveau compte enregistré: " + login);
+    Paquet out;
+    out << SMSG_REG_OK;
+    out.send(client->getSocket());
 }

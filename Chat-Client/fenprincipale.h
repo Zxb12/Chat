@@ -1,6 +1,8 @@
 #ifndef FENPRINCIPALE_H
 #define FENPRINCIPALE_H
 
+#define TAILLE_MDP_MIN  5
+
 #include <QWidget>
 #include <QTcpSocket>
 #include <QTime>
@@ -37,6 +39,7 @@ public:
     void handleChat(Paquet*, quint16);
     void handleUserModification(Paquet*, quint16);
     void handlePing(Paquet*, quint16);
+    void handleRegister(Paquet*, quint16);
     void handleChatCommands(QString&);
 
 private:

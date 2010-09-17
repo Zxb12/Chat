@@ -24,4 +24,9 @@ OpCodeHandler OpCodeTable[NB_OPCODES] =
     {"SMSG_USER_RENAMED",                   &FenPrincipale::handleServerSide},
     {"SMSG_PING",                           &FenPrincipale::handleServerSide},
     {"CMSG_PONG",                           &FenPrincipale::handlePing},
+    {"CMSG_REGISTER",                       &FenPrincipale::handleRegister},
+    {"SMSG_REG_OK",                         &FenPrincipale::handleServerSide},
+    {"SMSG_REG_ACCT_ALREADY_EXISTS",        &FenPrincipale::handleServerSide},
+    {"SMSG_REG_INVALID_NICK",               &FenPrincipale::handleServerSide},
+    {"SMSG_REG_ERROR",                      &FenPrincipale::handleServerSide},
 };

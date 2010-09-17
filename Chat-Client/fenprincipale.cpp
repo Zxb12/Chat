@@ -314,6 +314,28 @@ void FenPrincipale::handlePing(Paquet *in, quint16 opCode)
     out.send(m_socket);
 }
 
+void FenPrincipale::handleRegister(Paquet *in, quint16 opCode)
+{
+    switch (opCode)
+    {
+    case SMSG_REG_OK:
+        CHAT("L'enregistrement a réussi.");
+        break;
+    case SMSG_REG_ACCT_ALREADY_EXISTS:
+        CHAT("ERREUR: Ce compte existe déjà.");
+        break;
+    case SMSG_REG_INVALID_NICK:
+        CHAT("ERREUR: Nom de compte trop court ou invalide.");
+        break;
+    case SMSG_REG_ERROR:
+        CHAT("ERREUR: Le serveur n'a pas pu vous enregistrer.");
+        break;
+    default:
+        CONSOLE("ERREUR: Paquet non géré dans handleRegister");
+        break;
+    }
+}
+
 void FenPrincipale::handleChatCommands(QString &msg)
 {
     //On quitte si le message n'est pas une commande.
@@ -364,6 +386,37 @@ void FenPrincipale::handleChatCommands(QString &msg)
     else if (args[0] == "/quit")
     {
         this->close();
+    }
+    else if (args[0] == "/register")
+    {
+        //Si on n'a pas assez d'arguments, on abandonne
+        if (args.size() < 3)
+        {
+            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            msg.clear();
+            return;
+        }
+
+        //Le mdp est toute la partie droite de la commande.
+        QByteArray pw;
+        for (int i = 2; i < args.size(); i++)
+            pw += args[i] + " ";
+        pw.chop(1); //Pour supprimer le dernier espace.
+
+        //Vérification de la taille du mdp
+        if (pw.size() < TAILLE_MDP_MIN)
+        {
+            CHAT("ERREUR: Mot de passe trop court");
+            msg.clear();
+            return;
+        }
+
+        //Enregistrement.
+        Paquet out;
+        out << CMSG_REGISTER;
+        out << args[1]; //Login
+        out << QCryptographicHash::hash(pw, QCryptographicHash::Sha1);  //Hash mdp
+        out.send(m_socket);
     }
     else
     {
