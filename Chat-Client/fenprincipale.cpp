@@ -17,6 +17,8 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
     ui->chat->setEnabled(false);
     ui->message->setEnabled(false);
     ui->envoyer->setEnabled(false);
+
+    ui->connecter->setFocus();
 }
 
 FenPrincipale::~FenPrincipale()
@@ -25,16 +27,11 @@ FenPrincipale::~FenPrincipale()
     delete ui;
 }
 
-void FenPrincipale::on_renommer_released()
+void FenPrincipale::on_pseudo_returnPressed()
 {
-    if (m_socket->isWritable())
-    {
-        Paquet out;
-        out << CMSG_AUTH_SET_NAME;
-        out << ui->pseudo->text();
-        out.send(m_socket);
-    }
+    on_connecter_clicked();
 }
+
 
 void FenPrincipale::on_connecter_clicked()
 {
@@ -49,16 +46,19 @@ void FenPrincipale::on_connecter_clicked()
 // Envoi d'un message au serveur
 void FenPrincipale::on_envoyer_clicked()
 {
-    if (m_socket->isWritable())
+    QString msg = ui->message->text();
+    handleChatCommands(msg);
+
+    if (m_socket->isWritable() && !msg.isEmpty())
     {
         Paquet out;
         out << CMSG_CHAT_MESSAGE;
-        out << ui->message->text();
+        out << msg;
         out.send(m_socket);
-
-        ui->message->clear(); // On vide la zone d'écriture du message
-        ui->message->setFocus(); // Et on remet le curseur à l'intérieur
     }
+
+    ui->message->clear(); // On vide la zone d'écriture du message
+    ui->message->setFocus(); // Et on remet le curseur à l'intérieur
 }
 
 // Appuyer sur la touche Entrée a le même effet que cliquer sur le bouton "Envoyer"
@@ -112,6 +112,8 @@ void FenPrincipale::connecte()
 
     out.send(m_socket);
 
+    //On sélectionne la zone de message.
+    ui->message->setFocus();
 }
 
 // Ce slot est appelé lorsqu'on est déconnecté du serveur
@@ -203,6 +205,8 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
         ui->chat->setEnabled(true);
         ui->message->setEnabled(true);
         ui->envoyer->setEnabled(true);
+
+        *in >> m_pseudo;
         
         break;
     default:
@@ -269,6 +273,10 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             *in >> ancienPseudo;
             *in >> nouveauPseudo;
 
+            //Si l'ancien pseudo correspond à notre pseudo, on fait la mise à jour.
+            if (m_pseudo == ancienPseudo)
+                m_pseudo = ancienPseudo;
+
             CHAT("<em>" + ancienPseudo + " s'appelle maintenant " + nouveauPseudo + ".</em>");
             break;
         }
@@ -286,4 +294,62 @@ void FenPrincipale::handlePing(Paquet *in, quint16 opCode)
     out << CMSG_PONG;
     out << time;
     out.send(m_socket);
+}
+
+void FenPrincipale::handleChatCommands(QString &msg)
+{
+    //On quitte si le message n'est pas une commande.
+    if (!msg.startsWith('/'))
+        return;
+
+    //Extraction des arguments
+    QStringList args = msg.split(' ');
+
+    //Commande en lowcase
+    args[0] = args[0].toLower();
+
+    if (args[0] == "/nick")
+    {
+        if (args.size() < 2)
+        {
+            CHAT("Vous devez définir un pseudo !");
+            msg.clear();
+            return;
+        }
+
+        //Si le pseudo comporte des espaces (plusieurs args) on l'assemble.
+        QString pseudo;
+        for (int i = 1; i < args.size(); i++)
+            pseudo += args[i];
+
+        Paquet out;
+        out << CMSG_AUTH_RENAME;
+        out << pseudo;
+        out.send(m_socket);
+    }
+    else if (args[0] == "/afk")
+    {
+        Paquet out;
+        out << CMSG_AUTH_RENAME;
+        if (m_pseudo.endsWith("_AFK"))
+        {
+            m_pseudo.chop(4);
+            out << m_pseudo;
+        }
+        else
+        {
+            m_pseudo += "_AFK";
+            out << m_pseudo;
+        }
+        out.send(m_socket);
+    }
+    else if (args[0] == "/quit")
+    {
+        this->close();
+    }
+    else
+    {
+        CHAT("ERREUR: Commande chat invalide.");
+    }
+    msg.clear();
 }

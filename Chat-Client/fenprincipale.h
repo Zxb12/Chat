@@ -21,10 +21,6 @@ public:
     ~FenPrincipale();
 
 public slots:
-    void on_renommer_released();
-    void on_connecter_clicked();
-    void on_envoyer_clicked();
-    void on_message_returnPressed();
     void donneesRecues();
     void connecte();
     void deconnecte();
@@ -40,6 +36,7 @@ public:
     void handleChat(Paquet*, quint16);
     void handleUserModification(Paquet*, quint16);
     void handlePing(Paquet*, quint16);
+    void handleChatCommands(QString&);
 
 private:
     Ui::FenPrincipale *ui;
@@ -47,6 +44,13 @@ private:
     QTcpSocket *m_socket;
     QString m_pseudo;
     quint16 m_taillePaquet;
+
+private slots:
+    void on_pseudo_returnPressed();
+    void on_connecter_clicked();
+    void on_envoyer_clicked();
+    void on_message_returnPressed();
+
 };
 
 #endif // FENPRINCIPALE_H

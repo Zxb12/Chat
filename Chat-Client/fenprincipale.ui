@@ -75,10 +75,23 @@
          <property name="text">
           <string>Connecter</string>
          </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+         <property name="default">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QLineEdit" name="pseudo"/>
+        <widget class="QLineEdit" name="pseudo">
+         <property name="text">
+          <string>Zxb12</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="0">
         <widget class="QLabel" name="label_3">
@@ -171,6 +184,16 @@ p, li { white-space: pre-wrap; }
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>adresse</tabstop>
+  <tabstop>port</tabstop>
+  <tabstop>pseudo</tabstop>
+  <tabstop>connecter</tabstop>
+  <tabstop>message</tabstop>
+  <tabstop>envoyer</tabstop>
+  <tabstop>chat</tabstop>
+  <tabstop>console</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

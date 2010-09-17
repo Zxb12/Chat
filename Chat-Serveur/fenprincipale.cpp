@@ -272,13 +272,9 @@ void FenPrincipale::handleAuthRename(Paquet *in, Client *client)
     client->setPseudo(pseudo);
 
     Paquet out;
-    out << SMSG_AUTH_OK;
-    out << pseudo;
-    out.send(client->getSocket());
-
-    out.clear();
     out << SMSG_USER_RENAMED;
-    out << ancienPseudo << pseudo;
+    out << ancienPseudo;
+    out << pseudo;
     envoyerATous(out);
 
     return;
