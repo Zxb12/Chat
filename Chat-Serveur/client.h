@@ -28,7 +28,7 @@ public:
     QTcpSocket* getSocket() { return m_socket; }
 
     QString getPseudo() { return m_pseudo; }
-    bool setPseudo(QString pseudo) { m_pseudo = pseudo; return true; }
+    void setPseudo(QString pseudo) { m_pseudo = pseudo; }
     quint8 getPingsPending() { return m_pingsPending; }
     void setPingsPending(quint8 pings) { m_pingsPending = pings; }
     quint16 getPing() { return m_ping; }
