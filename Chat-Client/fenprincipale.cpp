@@ -107,7 +107,7 @@ void FenPrincipale::connecte()
 
     //On demande au serveur de nous attribuer un pseudo.
     Paquet out;
-    out << CMSG_AUTH_SET_NAME;
+    out << CMSG_SET_NICK;
     out << ui->pseudo->text();
 
     out.send(m_socket);
@@ -190,13 +190,13 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
 {
     switch (opCode)
     {
-    case SMSG_AUTH_NAME_ALREADY_IN_USE:
+    case SMSG_NICK_ALREADY_IN_USE:
         CHAT("ERREUR: Impossible de se nommer ainsi, le pseudo est déjà utilisé.");
         break;
     case SMSG_AUTH_IP_BANNED:
         CHAT("ERREUR: Votre IP a été bannie");
         break;
-    case SMSG_AUTH_NAME_TOO_SHORT:
+    case SMSG_NICK_TOO_SHORT:
         CHAT("ERREUR: Pseudo trop court.");
         break;
     case SMSG_AUTH_OK:
@@ -227,8 +227,8 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
     case SMSG_INVALID_MESSAGE:
         CHAT("ERREUR: Le message envoyé est invalide");
         break;
-    case SMSG_NAME_NOT_SET:
-        CHAT("ERREUR: Impossible d'envoyer un message, vous n'avez pas de pseudo défini");
+    case SMSG_INVALID_NICK:
+        CHAT("ERREUR: Impossible d'envoyer un message, votre pseudo est invalide ou indéfini.");
         break;
     case SMSG_CHAT_MESSAGE:
         {
@@ -323,14 +323,14 @@ void FenPrincipale::handleChatCommands(QString &msg)
             pseudo += args[i];
 
         Paquet out;
-        out << CMSG_AUTH_RENAME;
+        out << CMSG_SET_NICK;
         out << pseudo;
         out.send(m_socket);
     }
     else if (args[0] == "/afk")
     {
         Paquet out;
-        out << CMSG_AUTH_RENAME;
+        out << CMSG_SET_NICK;
         if (m_pseudo.endsWith("_AFK"))
         {
             m_pseudo.chop(4);

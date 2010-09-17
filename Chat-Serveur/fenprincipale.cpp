@@ -178,7 +178,7 @@ void FenPrincipale::handleServerSide(Paquet* in, Client* client)
 }
 
 //OpCode reçu lors de la première connexion du client.
-void FenPrincipale::handleAuthSetName(Paquet* in, Client* client)
+void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
 {
     QString pseudo;
     *in >> pseudo;
@@ -190,7 +190,7 @@ void FenPrincipale::handleAuthSetName(Paquet* in, Client* client)
     {
         CONSOLE("ERREUR: Nommage impossible, pseudo trop court.");
         Paquet out;
-        out << SMSG_AUTH_NAME_TOO_SHORT;
+        out << SMSG_NICK_TOO_SHORT;
         out.send(client->getSocket());
 
         kickClient(client);
@@ -206,7 +206,7 @@ void FenPrincipale::handleAuthSetName(Paquet* in, Client* client)
             CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
 
             Paquet out;
-            out << SMSG_AUTH_NAME_ALREADY_IN_USE;
+            out << SMSG_NICK_ALREADY_IN_USE;
             out.send(client->getSocket());
 
             kickClient(client);
@@ -233,7 +233,7 @@ void FenPrincipale::handleAuthSetName(Paquet* in, Client* client)
 
 }
 
-void FenPrincipale::handleAuthRename(Paquet *in, Client *client)
+void FenPrincipale::handleSetNick(Paquet *in, Client *client)
 {
     QString pseudo, ancienPseudo;
     *in >> pseudo;
@@ -246,7 +246,7 @@ void FenPrincipale::handleAuthRename(Paquet *in, Client *client)
     {
         CONSOLE("ERREUR: Nommage impossible, pseudo trop court.");
         Paquet out;
-        out << SMSG_AUTH_NAME_TOO_SHORT;
+        out << SMSG_NICK_TOO_SHORT;
         out.send(client->getSocket());
 
         return;
@@ -260,7 +260,7 @@ void FenPrincipale::handleAuthRename(Paquet *in, Client *client)
             CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
 
             Paquet out;
-            out << SMSG_AUTH_NAME_ALREADY_IN_USE;
+            out << SMSG_NICK_ALREADY_IN_USE;
             out.send(client->getSocket());
 
             return;
@@ -301,11 +301,11 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
         return;
     }
 
-    //On vérifie que le client a un pseudo.
-    if (pseudo.isEmpty())
+    //On vérifie que le client a un pseudo valide.
+    if (pseudo.size() < TAILLE_PSEUDO_MIN)
     {
         Paquet out;
-        out << SMSG_NAME_NOT_SET;
+        out << SMSG_INVALID_NICK;
         out.send(client->getSocket());
         return;
     }

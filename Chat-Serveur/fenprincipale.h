@@ -35,8 +35,8 @@ public:
     //Handlers des opCodes reçus.
     void handleServerSide(Paquet*, Client*);
     void handleHello(Paquet*, Client*);
-    void handleAuthSetName(Paquet*, Client*);
-    void handleAuthRename(Paquet*, Client*);
+    void handleAuthLogin(Paquet*, Client*);
+    void handleSetNick(Paquet*, Client*);
     void handleChatMessage(Paquet*, Client*);
     void handlePing(Paquet*, Client*);
 
