@@ -4,7 +4,7 @@
 #define CONSOLE(a) ui->console->append(QTime::currentTime().toString() + " " + a)
 #define CHAT(a)    ui->chat->appendHtml(a)
 
-FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenPrincipale), m_taillePaquet(0)
+FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenPrincipale), m_taillePaquet(0), m_acctName("")
 {
     ui->setupUi(this);
 
@@ -105,9 +105,13 @@ void FenPrincipale::connecte()
     CONSOLE("Connexion réussie !");
     ui->connecter->setEnabled(true);
 
+    QByteArray pwhash = QCryptographicHash::hash(ui->password->text().toUtf8(), QCryptographicHash::Sha1);
+
     //On demande au serveur de nous attribuer un pseudo.
     Paquet out;
-    out << CMSG_SET_NICK;
+    out << CMSG_AUTH_LOGIN;
+    out << ui->login->text();
+    out << pwhash;
     out << ui->pseudo->text();
 
     out.send(m_socket);
@@ -143,6 +147,8 @@ void FenPrincipale::erreurSocket(QAbstractSocket::SocketError erreur)
     default:
         CONSOLE("ERREUR : " + m_socket->errorString() + "");
     }
+
+    CHAT("Impossible de se connecter.");
 
     ui->connecter->setEnabled(true);
 }
@@ -190,11 +196,23 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
 {
     switch (opCode)
     {
-    case SMSG_NICK_ALREADY_IN_USE:
-        CHAT("ERREUR: Impossible de se nommer ainsi, le pseudo est déjà utilisé.");
+    case SMSG_AUTH_INCORRECT_LOGIN:
+        CHAT("ERREUR: Identifiant ou mot de passe de connexion incorrect.");
+        break;
+    case SMSG_AUTH_ACCT_ALREADY_IN_USE:
+        CHAT("ERREUR: Ce compte est déjà connecté.");
+        break;
+    case SMSG_AUTH_ACCT_BANNED:
+        CHAT("ERREUR: Ce compte a été banni.");
         break;
     case SMSG_AUTH_IP_BANNED:
         CHAT("ERREUR: Votre IP a été bannie");
+        break;
+    case SMSG_AUTH_ERROR:
+        CHAT("ERREUR: Erreur d'authentifiation.");
+        break;
+    case SMSG_NICK_ALREADY_IN_USE:
+        CHAT("ERREUR: Impossible de se nommer ainsi, le pseudo est déjà utilisé.");
         break;
     case SMSG_NICK_TOO_SHORT:
         CHAT("ERREUR: Pseudo trop court.");

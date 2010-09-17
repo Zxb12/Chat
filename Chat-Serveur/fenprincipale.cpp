@@ -180,11 +180,58 @@ void FenPrincipale::handleServerSide(Paquet* in, Client* client)
 //OpCode reçu lors de la première connexion du client.
 void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
 {
-    QString pseudo;
+    QString pseudo, login;
+    QByteArray pwhash;
+
+    *in >> login;
+    *in >> pwhash;
     *in >> pseudo;
 
+    login = login.toUpper();
+    pwhash = pwhash.toHex();
     pseudo = pseudo.simplified();
 
+    QSqlQuery query;
+    query.prepare("SELECT * FROM account where login = :login AND pwhash = :pwhash");
+    query.bindValue(":login", login);
+    query.bindValue(":pwhash", pwhash);
+    if (!query.exec())
+    {
+        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        Paquet out;
+        out << SMSG_AUTH_ERROR;
+        out.send(client->getSocket());
+        kickClient(client);
+        return;
+    }
+
+    if (!query.next())
+    {
+        //On n'a trouvé aucun enregistrement: compte ou mdp incorrect !
+        CONSOLE("Un client a essayé de se connecter avec un mauvais login/mdp.");
+        Paquet out;
+        out << SMSG_AUTH_INCORRECT_LOGIN;
+        out.send(client->getSocket());
+        kickClient(client);
+        return;
+    }
+
+    //On a trouvé un enregistrement correspondant au nom et au mot de passe !
+    //On vérifie si personne n'est déjà connecté sous ce nom.
+    foreach(Client* i_client, m_clients)
+    {
+        if (i_client->getAccount() == login)
+        {
+            CONSOLE("Un client a essayé de se connecter avec un compte déjà utilisé.");
+            Paquet out;
+            out << SMSG_AUTH_ACCT_ALREADY_IN_USE;
+            out.send(client->getSocket());
+            kickClient(client);
+            return;
+        }
+    }
+
+    //Le compte est OK.
     //Vérifie la taille du pseudo
     if (pseudo.size() < TAILLE_PSEUDO_MIN)
     {
@@ -192,32 +239,28 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
         Paquet out;
         out << SMSG_NICK_TOO_SHORT;
         out.send(client->getSocket());
-
         kickClient(client);
-
         return;
     }
 
     //Vérifie si le pseudo est déjà utilisé
     foreach(Client* i_client, m_clients)
     {
-        if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == 0)
+        if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == false)
         {
             CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
-
             Paquet out;
             out << SMSG_NICK_ALREADY_IN_USE;
             out.send(client->getSocket());
-
             kickClient(client);
-
             return;
         }
     }
 
-    //Renommage du client
-    CONSOLE("Client nommé: " + pseudo);
+    //Client authentifié.
+    CONSOLE("Client authentifié : " + pseudo);
     client->setPseudo(pseudo);
+    client->setAccount(login);
 
     Paquet out;
     out << SMSG_AUTH_OK;

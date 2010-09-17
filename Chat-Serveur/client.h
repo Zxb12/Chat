@@ -29,6 +29,8 @@ public:
 
     QString getPseudo() { return m_pseudo; }
     void setPseudo(QString pseudo) { m_pseudo = pseudo; }
+    QString getAccount() { return m_account; }
+    void setAccount(QString account) { m_account = account; }
     quint8 getPingsPending() { return m_pingsPending; }
     void setPingsPending(quint8 pings) { m_pingsPending = pings; }
     quint16 getPing() { return m_ping; }
@@ -48,7 +50,10 @@ public slots:
 private:
     QTcpSocket *m_socket;
     quint16 m_taillePaquet;
+
     QString m_pseudo;
+    QString m_account;
+    quint8 m_authLevel;
 
     quint8 m_pingsPending;
     QTimer *m_pingTimer;

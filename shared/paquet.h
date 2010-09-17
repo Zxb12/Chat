@@ -19,12 +19,14 @@ public:
     Paquet operator<<(const quint64&);
     Paquet operator<<(const QString&);
     Paquet operator<<(const OpCodeValues&);
+    Paquet operator<<(const QByteArray&);
 
     Paquet operator>>(quint8&);
     Paquet operator>>(quint16&);
     Paquet operator>>(quint32&);
     Paquet operator>>(quint64&);
     Paquet operator>>(QString&);
+    Paquet operator>>(QByteArray&);
 
 
 

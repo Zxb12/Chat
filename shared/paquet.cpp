@@ -54,6 +54,11 @@ Paquet Paquet::operator<<(const OpCodeValues &val)
     return *this;
 }
 
+Paquet Paquet::operator<<(const QByteArray &val)
+{
+    m_stream << (QByteArray) val;
+    return *this;
+}
 
 
 
@@ -82,6 +87,12 @@ Paquet Paquet::operator>>(quint64 &val)
 }
 
 Paquet Paquet::operator>>(QString &val)
+{
+    m_stream >> val;
+    return *this;
+}
+
+Paquet Paquet::operator>>(QByteArray &val)
 {
     m_stream >> val;
     return *this;

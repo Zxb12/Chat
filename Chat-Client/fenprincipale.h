@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QTcpSocket>
 #include <QTime>
+#include <QCryptographicHash>
 
 #include "../shared/paquet.h"
 #include "opcode.h"
@@ -41,9 +42,12 @@ public:
 private:
     Ui::FenPrincipale *ui;
 
+    //Socket
     QTcpSocket *m_socket;
-    QString m_pseudo;
     quint16 m_taillePaquet;
+
+    QString m_pseudo;
+    QString m_acctName;
 
 private slots:
     void on_pseudo_returnPressed();
