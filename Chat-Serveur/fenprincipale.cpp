@@ -182,6 +182,8 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
 {
     QString pseudo, login;
     QByteArray pwhash;
+    quint8 authLevel;
+    quint32 id;
 
     *in >> login;
     *in >> pwhash;
@@ -191,47 +193,89 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     pwhash = pwhash.toHex();
     pseudo = pseudo.simplified();
 
-    QSqlQuery query;
-    query.prepare("SELECT * FROM account where login = :login AND pwhash = :pwhash");
-    query.bindValue(":login", login);
-    query.bindValue(":pwhash", pwhash);
-    if (!query.exec())
+    //Notre client a spécifié un compte
+    if (!login.isEmpty())
     {
-        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
-        Paquet out;
-        out << SMSG_AUTH_ERROR;
-        out.send(client->getSocket());
-        kickClient(client);
-        return;
-    }
-
-    if (!query.next())
-    {
-        //On n'a trouvé aucun enregistrement: compte ou mdp incorrect !
-        CONSOLE("Un client a essayé de se connecter avec un mauvais login/mdp.");
-        Paquet out;
-        out << SMSG_AUTH_INCORRECT_LOGIN;
-        out.send(client->getSocket());
-        kickClient(client);
-        return;
-    }
-
-    //On a trouvé un enregistrement correspondant au nom et au mot de passe !
-    //On vérifie si personne n'est déjà connecté sous ce nom.
-    foreach(Client* i_client, m_clients)
-    {
-        if (i_client->getAccount() == login)
+        QSqlQuery query;
+        query.prepare("SELECT * FROM account where login = :login AND pwhash = :pwhash");
+        query.bindValue(":login", login);
+        query.bindValue(":pwhash", pwhash);
+        if (!query.exec())
         {
-            CONSOLE("Un client a essayé de se connecter avec un compte déjà utilisé.");
+            CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
             Paquet out;
-            out << SMSG_AUTH_ACCT_ALREADY_IN_USE;
+            out << SMSG_AUTH_ERROR;
             out.send(client->getSocket());
             kickClient(client);
             return;
         }
-    }
 
-    //Le compte est OK.
+        if (!query.next())
+        {
+            //On n'a trouvé aucun enregistrement: compte ou mdp incorrect !
+            CONSOLE("Un client a essayé de se connecter avec un mauvais login/mdp.");
+            Paquet out;
+            out << SMSG_AUTH_INCORRECT_LOGIN;
+            out.send(client->getSocket());
+            kickClient(client);
+            return;
+        }
+
+        //On a trouvé un enregistrement correspondant au nom et au mot de passe !
+        //On récupère son niveau et son id
+        authLevel = query.value(3).toInt();
+        id = query.value(0).toInt();
+
+        //On vérifie s'il n'est pas banni.
+        query.prepare("SELECT * FROM ban_account WHERE account_id = :id");
+        query.bindValue(":id", id);
+        if (!query.exec())
+            CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        if (query.next())
+        {
+            //On a trouvé un enregistrement de ban
+            QDateTime finBan = query.value(2).toDateTime();
+            if (finBan < QDateTime::currentDateTime())
+            {
+                //Le ban est terminé, on le supprime.
+                query.prepare("DELETE FROM ban_account WHERE account_id = :id");
+                query.bindValue(":id", id);
+                if (!query.exec())
+                    CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+            }
+            else
+            {
+                //Le compte est banni.
+                Paquet out;
+                out << SMSG_AUTH_ACCT_BANNED;
+                out << (quint32) QDateTime::currentDateTime().secsTo(finBan);
+                out.send(client->getSocket());
+                kickClient(client);
+                return;
+            }
+        }
+
+        //On vérifie si personne n'est déjà connecté sous ce nom.
+        foreach(Client* i_client, m_clients)
+        {
+            if (i_client->getAccount() == login)
+            {
+                CONSOLE("Un client a essayé de se connecter avec un compte déjà utilisé.");
+                Paquet out;
+                out << SMSG_AUTH_ACCT_ALREADY_IN_USE;
+                out.send(client->getSocket());
+                kickClient(client);
+                return;
+            }
+        }
+
+        //Le compte est OK.
+    }
+    else
+    {
+        //Pas de compte spécifié
+        authLevel = 0;
+    }
     //Vérifie la taille du pseudo
     if (pseudo.size() < TAILLE_PSEUDO_MIN)
     {
@@ -246,7 +290,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     //Vérifie si le pseudo est déjà utilisé
     foreach(Client* i_client, m_clients)
     {
-        if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == false)
+        if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == 0)
         {
             CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
             Paquet out;
@@ -261,6 +305,8 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     CONSOLE("Client authentifié : " + pseudo);
     client->setPseudo(pseudo);
     client->setAccount(login);
+    client->setAuthLevel(authLevel);
+    client->setIdCompte(id);
 
     Paquet out;
     out << SMSG_AUTH_OK;
@@ -395,6 +441,15 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
     *in >> login;
     *in >> pwhash;
 
+    //Vérification des droits.
+    if (client->getAuthLevel() < REGISTER_LVL)
+    {
+        Paquet out;
+        out << SMSG_NOT_AUTHORIZED;
+        out.send(client->getSocket());
+        return;
+    }
+
     //Traitement des données
     login = login.simplified().toUpper();
     pwhash = pwhash.toHex();
@@ -432,7 +487,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
     }
 
     //Insersion dans la base de données.
-    query.prepare("INSERT INTO account (login, pwhash) VALUES (:login, :pwhash)");
+    query.prepare("INSERT INTO account (login, pwhash, level) VALUES (:login, :pwhash, 1)");
     query.bindValue(":login", login);
     query.bindValue(":pwhash", pwhash);
     if (!query.exec())
@@ -445,8 +500,246 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
         return;
     }
 
+
+
     CONSOLE("Nouveau compte enregistré: " + login);
     Paquet out;
     out << SMSG_REG_OK;
+    out << login;
     out.send(client->getSocket());
+}
+
+void FenPrincipale::handleKick(Paquet *in, Client *client)
+{
+    //On vérifie le niveau d'authentification
+    if (client->getAuthLevel() < KICK_LVL)
+    {
+        Paquet out;
+        out << SMSG_NOT_AUTHORIZED;
+        out.send(client->getSocket());
+        return;
+    }
+
+    //On vérifie que la personne existe
+    QString pseudo;
+    *in >> pseudo;
+
+    Client* clientAKicker = NULL;
+    foreach (Client *i_client, m_clients)
+    {
+        if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == 0)
+        {
+            clientAKicker = i_client;
+            break;
+        }
+    }
+
+    //Si on a pas trouvé, on ne kick pas
+    if (!clientAKicker)
+    {
+        Paquet out;
+        out << SMSG_USER_DOESNT_EXIST;
+        out.send(client->getSocket());
+        return;
+    }
+
+    //On vérifie que la cible n'est pas de plus haut niveau.
+    if (clientAKicker->getAuthLevel() >= client->getAuthLevel())
+    {
+        Paquet out;
+        out << SMSG_NO_INTERACT_HIGHER_LEVEL;
+        out.send(client->getSocket());
+        return;
+    }
+
+    //On annonce le kick
+    Paquet out;
+    out << SMSG_USER_KICKED;
+    out << client->getPseudo(); //On dit qui a kické.
+    out << clientAKicker->getPseudo(); //On prend le pseudo réel (majuscules...)
+    envoyerATous(out);
+
+    //On kicke le client.
+    kickClient(clientAKicker);
+}
+
+void FenPrincipale::handleBan(Paquet *in, Client *client)
+{
+    //On vérifie le niveau d'authentification
+    if (client->getAuthLevel() < BAN_LVL)
+    {
+        Paquet out;
+        out << SMSG_NOT_AUTHORIZED;
+        out.send(client->getSocket());
+        return;
+    }
+
+    //On vérifie que la personne existe
+    QString pseudo, raison;
+    *in >> pseudo;
+
+    *in >> raison;
+    if (raison.isEmpty())
+        raison = "No reason set.";
+
+    Client* clientABannir = NULL;
+
+    foreach (Client *i_client, m_clients)
+    {
+        if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == 0)
+        {
+            clientABannir = i_client;
+            break;
+        }
+    }
+
+    //Si on a pas trouvé, on ne ban pas
+    if (!clientABannir)
+    {
+        Paquet out;
+        out << SMSG_USER_DOESNT_EXIST;
+        out.send(client->getSocket());
+        return;
+    }
+
+    //On vérifie que la cible n'est pas plus haut niveau
+    if (clientABannir->getAuthLevel() >= client->getAuthLevel())
+    {
+        Paquet out;
+        out << SMSG_NO_INTERACT_HIGHER_LEVEL;
+        out.send(client->getSocket());
+        return;
+    }
+
+
+    //On annonce le ban
+    Paquet out;
+    out << SMSG_USER_BANNED;
+    out << client->getPseudo(); //On dit qui a banni.
+    out << clientABannir->getPseudo(); //On prend le pseudo réel (majuscules...)
+    envoyerATous(out);
+
+    //On enregistre le ban
+    QSqlQuery query;
+    query.prepare("INSERT INTO ban_account (account_id, bandate, unbandate, bannedby, reason) "
+                  "VALUES (:id, :bandate, :unbandate, :bannedby, :reason)");
+    query.bindValue(":id", clientABannir->getIdCompte());
+    query.bindValue(":bandate", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss:zzz"));
+    query.bindValue(":unbandate", QDateTime::currentDateTime().addSecs(300).toString("yyyy-MM-dd hh:mm:ss:zzz"));
+    query.bindValue(":bannedby", client->getPseudo());
+    query.bindValue(":reason", raison);
+    if (!query.exec())
+        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+
+    //On kick le client.
+    kickClient(clientABannir);
+}
+
+void FenPrincipale::handleVoice(Paquet *in, Client *client)
+{
+
+}
+
+void FenPrincipale::handlePromote(Paquet *in, Client *client)
+{
+    QString login;
+    quint8 level;
+
+    *in >> login;
+    *in >> level;
+
+    login = login.toUpper();
+    Client *clientAModifier = NULL;
+
+    //On détermine le client à modifier (s'il existe)
+    foreach (Client *i_client, m_clients)
+    {
+        if (i_client->getAccount() == login)
+        {
+            clientAModifier = i_client;
+            break;
+        }
+    }
+
+    //Vérification du niveau
+    if (level > LVL_MAX || level < 1)
+    {
+        Paquet out;
+        out << SMSG_PROMOTE_INVALID_LEVEL;
+        out.send(client->getSocket());
+        return;
+    }
+
+    //On ne modifie pas son niveau.
+    if (login == client->getAccount())
+    {
+        Paquet out;
+        out << SMSG_PROMOTE_NOT_YOURSELF;
+        out.send(client->getSocket());
+        return;
+    }
+
+    //Modification du compte.
+    QSqlQuery query;
+    query.prepare("SELECT * FROM account WHERE login = :login");
+    query.bindValue(":login", login);
+    if (!query.exec())
+    {
+        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        Paquet out;
+        out << SMSG_PROMOTE_ERROR;
+        out.send(client->getSocket());
+        return;
+    }
+
+    if (!query.next())
+    {
+        //Compte non trouvé
+        Paquet out;
+        out << SMSG_PROMOTE_ACCT_DOESNT_EXIST;
+        out.send(client->getSocket());
+        return;
+    }
+
+    quint8 acctLevel = query.value(3).toInt();
+
+    //Vérifications concernant le compte.
+    if (client->getAuthLevel() <= acctLevel)
+    {
+        Paquet out;
+        out << SMSG_NO_INTERACT_HIGHER_LEVEL;
+        out.send(client->getSocket());
+        return;
+    }
+    if (acctLevel > client->getAuthLevel())
+    {
+        Paquet out;
+        out << SMSG_PROMOTE_LEVEL_TOO_HIGH;
+        out.send(client->getSocket());
+        return;
+    }
+
+    query.prepare("UPDATE account SET level = :level WHERE login = :login");
+    query.bindValue(":level", level);
+    query.bindValue(":login", login);
+    if (!query.exec())
+        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+
+    //Modification du niveau d'administration.
+    Paquet out;
+
+    if (clientAModifier)
+    {
+        clientAModifier->setAuthLevel(level);
+
+        out << SMSG_PROMOTED;
+        out << client->getPseudo();
+        out << level;
+        out.send(clientAModifier->getSocket());
+        out.clear();
+    }
+
+    out << SMSG_PROMOTE_OK;
+    out.send(client->getSocket());
+    return;
 }

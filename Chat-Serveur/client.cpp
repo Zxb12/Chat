@@ -2,8 +2,9 @@
 
 #define CONSOLE(a) emit console(a)
 
-Client::Client(QTcpSocket *socket) : m_socket(socket), m_taillePaquet(0), m_pseudo(""), m_pingsPending(0), m_ping(0), m_account(""),
-                                     m_authLevel(0)
+Client::Client(QTcpSocket *socket) : m_socket(socket), m_taillePaquet(0), m_pseudo(""), m_account(""), m_authLevel(0), m_idCompte(0),
+                                     m_pingsPending(0), m_ping(0)
+
 {
     connect(m_socket, SIGNAL(readyRead()), this, SLOT(donneesRecues()));
     connect(m_socket, SIGNAL(disconnected()), this, SLOT(deconnexion()));

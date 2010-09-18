@@ -136,19 +136,17 @@ void FenPrincipale::erreurSocket(QAbstractSocket::SocketError erreur)
     switch(erreur) // On affiche un message différent selon l'erreur qu'on nous indique
     {
     case QAbstractSocket::HostNotFoundError:
-        CONSOLE("ERREUR : le serveur n'a pas pu être trouvé. Vérifiez l'IP et le port.");
+        CHAT("ERREUR : le serveur n'a pas pu être trouvé. Vérifiez l'IP et le port.");
         break;
     case QAbstractSocket::ConnectionRefusedError:
-        CONSOLE("ERREUR : le serveur a refusé la connexion. Vérifiez si le programme \"serveur\" a bien été lancé. Vérifiez aussi l'IP et le port.");
+        CHAT("ERREUR : le serveur a refusé la connexion. Vérifiez si le programme \"serveur\" a bien été lancé. Vérifiez aussi l'IP et le port.");
         break;
     case QAbstractSocket::RemoteHostClosedError:
-        CONSOLE("ERREUR : le serveur a coupé la connexion.");
+        CHAT("ERREUR : le serveur a coupé la connexion.");
         break;
     default:
-        CONSOLE("ERREUR : " + m_socket->errorString() + "");
+        CHAT("ERREUR : " + m_socket->errorString() + "");
     }
-
-    CHAT("Impossible de se connecter.");
 
     ui->connecter->setEnabled(true);
 }
@@ -248,6 +246,30 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
     case SMSG_INVALID_NICK:
         CHAT("ERREUR: Impossible d'envoyer un message, votre pseudo est invalide ou indéfini.");
         break;
+    case SMSG_NOT_AUTHORIZED:
+        CHAT("ERREUR: Vous ne disposez pas des privilèges suffisants.");
+        break;
+    case SMSG_USER_DOESNT_EXIST:
+        CHAT("ERREUR: L'utilisateur spécifié n'existe pas");
+        break;
+    case SMSG_PROMOTE_ERROR:
+        CHAT("ERREUR: La promotion a échoué.");
+        break;
+    case SMSG_PROMOTE_INVALID_LEVEL:
+        CHAT("ERREUR: Ce niveau d'administration n'existe pas.");
+        break;
+    case SMSG_PROMOTE_ACCT_DOESNT_EXIST:
+        CHAT("ERREUR: Promotion échouée, le compte n'existe pas.");
+        break;
+    case SMSG_PROMOTE_LEVEL_TOO_HIGH:
+        CHAT("ERREUR: Promotion échouée, nous ne pouvez pas promouvoir un compte au-delà de votre niveau.");
+        break;
+    case SMSG_PROMOTE_NOT_YOURSELF:
+        CHAT("ERREUR: Vous ne pouvez pas vous promouvoir vous-même.");
+        break;
+    case SMSG_NO_INTERACT_HIGHER_LEVEL:
+        CHAT("ERREUR: Impossible d'interagir avec un compte de niveau spérieur ou égal au vôtre.");
+        break;
     case SMSG_CHAT_MESSAGE:
         {
             QString pseudo, message;
@@ -298,11 +320,58 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             CHAT("<em>" + ancienPseudo + " s'appelle maintenant " + nouveauPseudo + ".</em>");
             break;
         }
+    case SMSG_USER_KICKED:
+        {
+            QString pseudo, kickPar;
+            *in >> kickPar;
+            *in >> pseudo;
+
+            CHAT("<em> " + pseudo + " a été kické par " + kickPar + ".</em>");
+            break;
+        }
+    case SMSG_USER_BANNED:
+        {
+            QString pseudo, banPar;
+            *in >> banPar;
+            *in >> pseudo;
+
+            CHAT("<em> " + pseudo + " a été banni par " + banPar + ".</em>");
+            break;
+        }
+    case SMSG_USER_VOICED:
+        {
+            QString pseudo, voicePar;
+            *in >> pseudo;
+            *in >> voicePar;
+
+            CHAT("<em> " + pseudo + " a été voicé par " + voicePar + ".</em>");
+            break;
+        }
+    case SMSG_PROMOTE_OK:
+        {
+            QString compte;
+            *in >> compte;
+
+            CHAT("<em>Le niveau du compte " + compte + " a été changé.</em>");
+            break;
+        }
+    case SMSG_PROMOTED:
+        {
+            QString pseudo;
+            quint8 level;
+
+            *in >> pseudo;
+            *in >> level;
+
+            CHAT("<em>" + pseudo + " a modifié votre niveau d'administration au niveau " + QString::number(level) + ".</em>");
+            break;
+        }
     default:
         CONSOLE("ERREUR: Paquet non géré dans handleUserModification");
         break;
     }
 }
+
 void FenPrincipale::handlePing(Paquet *in, quint16 opCode)
 {
     quint32 time;
@@ -319,8 +388,14 @@ void FenPrincipale::handleRegister(Paquet *in, quint16 opCode)
     switch (opCode)
     {
     case SMSG_REG_OK:
-        CHAT("L'enregistrement a réussi.");
-        break;
+        {
+            CHAT("L'enregistrement a réussi.");
+            QString login;
+            *in >> login;
+            ui->login->setText(login);
+            ui->password->clear();
+            break;
+        }
     case SMSG_REG_ACCT_ALREADY_EXISTS:
         CHAT("ERREUR: Ce compte existe déjà.");
         break;
@@ -416,6 +491,67 @@ void FenPrincipale::handleChatCommands(QString &msg)
         out << CMSG_REGISTER;
         out << args[1]; //Login
         out << QCryptographicHash::hash(pw, QCryptographicHash::Sha1);  //Hash mdp
+        out.send(m_socket);
+    }
+    else if (args[0] == "/kick")
+    {
+        //Si on n'a pas assez d'arguments, on abandonne
+        if (args.size() < 2)
+        {
+            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            msg.clear();
+            return;
+        }
+
+        Paquet out;
+        out << CMSG_KICK;
+        out << args[1]; //Qui kicker
+        out.send(m_socket);
+    }
+    else if (args[0] == "/ban")
+    {
+        //Si on n'a pas assez d'arguments, on abandonne
+        if (args.size() < 2)
+        {
+            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            msg.clear();
+            return;
+        }
+
+        Paquet out;
+        out << CMSG_BAN;
+        out << args[1]; //Qui bannir
+        out.send(m_socket);
+    }
+    else if (args[0] == "/voice")
+    {
+        //Si on n'a pas assez d'arguments, on abandonne
+        if (args.size() < 2)
+        {
+            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            msg.clear();
+            return;
+        }
+
+        Paquet out;
+        out << CMSG_VOICE;
+        out << args[1]; //Qui voicer
+        out.send(m_socket);
+    }
+    else if (args[0] == "/setlevel")
+    {
+        //Si on n'a pas assez d'arguments, on abandonne
+        if (args.size() < 3)
+        {
+            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            msg.clear();
+            return;
+        }
+
+        Paquet out;
+        out << CMSG_PROMOTE;
+        out << args[1]; //Compte à promouvoir
+        out << (quint8) args[2].toUInt(); //Level
         out.send(m_socket);
     }
     else

@@ -5,6 +5,13 @@
 #define TAILLE_PSEUDO_MIN   4
 #define TAILLE_COMPTE_MIN   4
 
+#define LVL_MAX             3
+#define REGISTER_LVL        0
+#define KICK_LVL            2
+#define BAN_LVL             3
+#define VOICE_LVL           1
+#define PROMOTE_LVL         3
+
 #include <QWidget>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -41,6 +48,10 @@ public:
     void handleChatMessage(Paquet*, Client*);
     void handlePing(Paquet*, Client*);
     void handleRegister(Paquet*, Client*);
+    void handleKick(Paquet*, Client*);
+    void handleBan(Paquet*, Client*);
+    void handleVoice(Paquet*, Client*);
+    void handlePromote(Paquet*, Client*);
 
 
 public slots:
