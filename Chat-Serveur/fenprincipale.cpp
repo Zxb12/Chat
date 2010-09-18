@@ -190,6 +190,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     login = login.simplified().toUpper();
     pwhash = pwhash.toHex();
     pseudo = pseudo.simplified();
+    pseudo.remove(' '); //On supprime tous les espaces du pseudo.
 
     //Notre client a spécifié un compte
     if (!login.isEmpty())
@@ -327,6 +328,7 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
     ancienPseudo = client->getPseudo();
 
     pseudo = pseudo.simplified();
+    pseudo.remove(' '); //On enlève les espaces du pseudo.
 
     //Vérifie la taille du pseudo
     if (pseudo.size() < TAILLE_PSEUDO_MIN)
