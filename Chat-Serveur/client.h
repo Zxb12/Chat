@@ -9,15 +9,6 @@
 
 #include "../shared/paquet.h"
 
-class PingThread;
-
-//enum AuthStatus
-//{
-//    Disconnected,
-//    Connected
-//};
-
-
 class Client : public QObject
 {
     Q_OBJECT
@@ -58,9 +49,6 @@ private:
     quint8 m_pingsPending;
     QTimer *m_pingTimer;
     quint16 m_ping;
-
-    //AuthStatus m_authStatus;
-
 };
 
 #endif // CLIENT_H
