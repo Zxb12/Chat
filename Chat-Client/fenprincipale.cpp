@@ -288,9 +288,11 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
     case SMSG_USER_JOINED:
         {
             QString pseudo;
-            *in >> pseudo;
+            QByteArray hash;
+            quint8 level;
+            *in >> pseudo >> hash >> level;
 
-            CHAT("<em>" + pseudo + " s'est joint au Chat.</em>");
+            CHAT("<em>" + pseudo + " (" + hash + ", " + QString::number(level) + ") s'est joint au Chat.</em>");
             break;
         }
     case SMSG_USER_LEFT:

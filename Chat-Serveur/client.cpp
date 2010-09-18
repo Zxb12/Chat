@@ -13,6 +13,11 @@ Client::Client(QTcpSocket *socket) : m_socket(socket), m_taillePaquet(0), m_pseu
     m_pingTimer = new QTimer(this);
     connect(m_pingTimer, SIGNAL(timeout()), this, SLOT(sendPing()));
     m_pingTimer->start(10000);
+
+    //Génération du hash de l'IP.
+    //4 caractères hexa.
+    m_hashIP = QCryptographicHash::hash(m_socket->peerAddress().toString().toUtf8(),
+                                        QCryptographicHash::Md5).toHex().left(4);
 }
 
 Client::~Client()

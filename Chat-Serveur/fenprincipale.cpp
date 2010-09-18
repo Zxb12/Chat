@@ -314,7 +314,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
 
     out.clear();
     out << SMSG_USER_JOINED;
-    out << pseudo;
+    out << pseudo << client->getHashIP() << authLevel;
     envoyerATous(out);
 
     return;
