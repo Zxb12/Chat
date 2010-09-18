@@ -182,6 +182,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
 {
     QString pseudo, login;
     QByteArray pwhash;
+    quint8 authLevel;
 
     *in >> login;
     *in >> pwhash;
@@ -191,47 +192,59 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     pwhash = pwhash.toHex();
     pseudo = pseudo.simplified();
 
-    QSqlQuery query;
-    query.prepare("SELECT * FROM account where login = :login AND pwhash = :pwhash");
-    query.bindValue(":login", login);
-    query.bindValue(":pwhash", pwhash);
-    if (!query.exec())
+    //Notre client a spécifié un compte
+    if (!login.isEmpty())
     {
-        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
-        Paquet out;
-        out << SMSG_AUTH_ERROR;
-        out.send(client->getSocket());
-        kickClient(client);
-        return;
-    }
-
-    if (!query.next())
-    {
-        //On n'a trouvé aucun enregistrement: compte ou mdp incorrect !
-        CONSOLE("Un client a essayé de se connecter avec un mauvais login/mdp.");
-        Paquet out;
-        out << SMSG_AUTH_INCORRECT_LOGIN;
-        out.send(client->getSocket());
-        kickClient(client);
-        return;
-    }
-
-    //On a trouvé un enregistrement correspondant au nom et au mot de passe !
-    //On vérifie si personne n'est déjà connecté sous ce nom.
-    foreach(Client* i_client, m_clients)
-    {
-        if (i_client->getAccount() == login)
+        QSqlQuery query;
+        query.prepare("SELECT * FROM account where login = :login AND pwhash = :pwhash");
+        query.bindValue(":login", login);
+        query.bindValue(":pwhash", pwhash);
+        if (!query.exec())
         {
-            CONSOLE("Un client a essayé de se connecter avec un compte déjà utilisé.");
+            CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
             Paquet out;
-            out << SMSG_AUTH_ACCT_ALREADY_IN_USE;
+            out << SMSG_AUTH_ERROR;
             out.send(client->getSocket());
             kickClient(client);
             return;
         }
-    }
 
-    //Le compte est OK.
+        if (!query.next())
+        {
+            //On n'a trouvé aucun enregistrement: compte ou mdp incorrect !
+            CONSOLE("Un client a essayé de se connecter avec un mauvais login/mdp.");
+            Paquet out;
+            out << SMSG_AUTH_INCORRECT_LOGIN;
+            out.send(client->getSocket());
+            kickClient(client);
+            return;
+        }
+
+        //On a trouvé un enregistrement correspondant au nom et au mot de passe !
+        //On récupère son niveau
+        authLevel = query.value(3).toInt();
+
+        //On vérifie si personne n'est déjà connecté sous ce nom.
+        foreach(Client* i_client, m_clients)
+        {
+            if (i_client->getAccount() == login)
+            {
+                CONSOLE("Un client a essayé de se connecter avec un compte déjà utilisé.");
+                Paquet out;
+                out << SMSG_AUTH_ACCT_ALREADY_IN_USE;
+                out.send(client->getSocket());
+                kickClient(client);
+                return;
+            }
+        }
+
+        //Le compte est OK.
+    }
+    else
+    {
+        //Pas de compte spécifié
+        authLevel = 0;
+    }
     //Vérifie la taille du pseudo
     if (pseudo.size() < TAILLE_PSEUDO_MIN)
     {
@@ -261,6 +274,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     CONSOLE("Client authentifié : " + pseudo);
     client->setPseudo(pseudo);
     client->setAccount(login);
+    client->setAuthLevel(authLevel);
 
     Paquet out;
     out << SMSG_AUTH_OK;

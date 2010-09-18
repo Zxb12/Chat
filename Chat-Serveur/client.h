@@ -22,6 +22,8 @@ public:
     void setPseudo(QString pseudo) { m_pseudo = pseudo; }
     QString getAccount() { return m_account; }
     void setAccount(QString account) { m_account = account; }
+    quint8 getAuthLevel() { return m_authLevel; }
+    void setAuthLevel(quint8 authLevel) { m_authLevel = authLevel; }
     quint8 getPingsPending() { return m_pingsPending; }
     void setPingsPending(quint8 pings) { m_pingsPending = pings; }
     quint16 getPing() { return m_ping; }
