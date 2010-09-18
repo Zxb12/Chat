@@ -62,7 +62,7 @@ void Client::sendPing()
     Paquet out;
     out << SMSG_PING;
     out << quint32(time.msecsTo(QTime::currentTime()));
-    out.send(m_socket);
+    out >> m_socket;
 
     m_pingsPending++;
 

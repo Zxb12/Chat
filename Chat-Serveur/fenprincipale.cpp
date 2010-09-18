@@ -113,7 +113,7 @@ void FenPrincipale::kickClient(Client *client)
     CONSOLE("Le client " + client->getSocket()->peerAddress().toString() + " a été kické.");
     Paquet out;
     out << SMSG_KICK;
-    out.send(client->getSocket());
+    out >> client->getSocket();
     client->getSocket()->disconnectFromHost();
 }
 
@@ -160,7 +160,7 @@ void FenPrincipale::envoyerATous(Paquet &paquet)
     //Envoi du paquet à tous les clients.
     foreach(Client *client, m_clients)
     {
-        paquet.send(client->getSocket());
+        paquet >> client->getSocket();
     }
 }
 
@@ -169,7 +169,7 @@ void FenPrincipale::handleHello(Paquet* in, Client* client)
     Paquet out;
     out << SMSG_HELLO;
 
-    out.send(client->getSocket());
+    out >> client->getSocket();
 }
 
 void FenPrincipale::handleServerSide(Paquet* in, Client* client)
@@ -185,9 +185,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     quint8 authLevel;
     quint32 id;
 
-    *in >> login;
-    *in >> pwhash;
-    *in >> pseudo;
+    *in >> login >> pwhash >> pseudo;
 
     login = login.simplified().toUpper();
     pwhash = pwhash.toHex();
@@ -205,7 +203,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
             CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
             Paquet out;
             out << SMSG_AUTH_ERROR;
-            out.send(client->getSocket());
+            out >> client->getSocket();
             kickClient(client);
             return;
         }
@@ -216,7 +214,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
             CONSOLE("Un client a essayé de se connecter avec un mauvais login/mdp.");
             Paquet out;
             out << SMSG_AUTH_INCORRECT_LOGIN;
-            out.send(client->getSocket());
+            out >> client->getSocket();
             kickClient(client);
             return;
         }
@@ -249,7 +247,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
                 Paquet out;
                 out << SMSG_AUTH_ACCT_BANNED;
                 out << (quint32) QDateTime::currentDateTime().secsTo(finBan);
-                out.send(client->getSocket());
+                out >> client->getSocket();
                 kickClient(client);
                 return;
             }
@@ -263,7 +261,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
                 CONSOLE("Un client a essayé de se connecter avec un compte déjà utilisé.");
                 Paquet out;
                 out << SMSG_AUTH_ACCT_ALREADY_IN_USE;
-                out.send(client->getSocket());
+                out >> client->getSocket();
                 kickClient(client);
                 return;
             }
@@ -282,7 +280,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
         CONSOLE("ERREUR: Nommage impossible, pseudo trop court.");
         Paquet out;
         out << SMSG_NICK_TOO_SHORT;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         kickClient(client);
         return;
     }
@@ -295,7 +293,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
             CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
             Paquet out;
             out << SMSG_NICK_ALREADY_IN_USE;
-            out.send(client->getSocket());
+            out >> client->getSocket();
             kickClient(client);
             return;
         }
@@ -311,7 +309,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     Paquet out;
     out << SMSG_AUTH_OK;
     out << pseudo;
-    out.send(client->getSocket());
+    out >> client->getSocket();
 
     out.clear();
     out << SMSG_USER_JOINED;
@@ -336,7 +334,7 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
         CONSOLE("ERREUR: Nommage impossible, pseudo trop court.");
         Paquet out;
         out << SMSG_NICK_TOO_SHORT;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -348,7 +346,7 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
             CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
             Paquet out;
             out << SMSG_NICK_ALREADY_IN_USE;
-            out.send(client->getSocket());
+            out >> client->getSocket();
             return;
         }
     }
@@ -359,8 +357,7 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
 
     Paquet out;
     out << SMSG_USER_RENAMED;
-    out << ancienPseudo;
-    out << pseudo;
+    out << ancienPseudo << pseudo;
     envoyerATous(out);
 
     return;
@@ -383,7 +380,7 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_INVALID_MESSAGE;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -392,7 +389,7 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_INVALID_NICK;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -400,8 +397,7 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
     //Préparation du paquet
     Paquet out;
     out << SMSG_CHAT_MESSAGE;
-    out << pseudo;
-    out << message;
+    out << pseudo << message;
 
     envoyerATous(out);
 
@@ -438,15 +434,14 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
     QString login;
     QByteArray pwhash;
 
-    *in >> login;
-    *in >> pwhash;
+    *in >> login >> pwhash;
 
     //Vérification des droits.
     if (client->getAuthLevel() < REGISTER_LVL)
     {
         Paquet out;
         out << SMSG_NOT_AUTHORIZED;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -459,7 +454,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_REG_INVALID_NICK;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -473,7 +468,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
         CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
         Paquet out;
         out << SMSG_REG_ERROR;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -482,7 +477,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_REG_ACCT_ALREADY_EXISTS;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -496,7 +491,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
         CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
         Paquet out;
         out << SMSG_REG_ERROR;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -504,9 +499,8 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
 
     CONSOLE("Nouveau compte enregistré: " + login);
     Paquet out;
-    out << SMSG_REG_OK;
-    out << login;
-    out.send(client->getSocket());
+    out << SMSG_REG_OK << login;
+    out >> client->getSocket();
 }
 
 void FenPrincipale::handleKick(Paquet *in, Client *client)
@@ -516,7 +510,7 @@ void FenPrincipale::handleKick(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_NOT_AUTHORIZED;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -539,7 +533,7 @@ void FenPrincipale::handleKick(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_USER_DOESNT_EXIST;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -548,7 +542,7 @@ void FenPrincipale::handleKick(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_NO_INTERACT_HIGHER_LEVEL;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -570,15 +564,14 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_NOT_AUTHORIZED;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
     //On vérifie que la personne existe
     QString pseudo, raison;
-    *in >> pseudo;
+    *in >> pseudo >> raison;
 
-    *in >> raison;
     if (raison.isEmpty())
         raison = "No reason set.";
 
@@ -598,7 +591,7 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_USER_DOESNT_EXIST;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -607,7 +600,7 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_NO_INTERACT_HIGHER_LEVEL;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -645,8 +638,7 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
     QString login;
     quint8 level;
 
-    *in >> login;
-    *in >> level;
+    *in >> login >> level;
 
     login = login.toUpper();
     Client *clientAModifier = NULL;
@@ -666,7 +658,7 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_PROMOTE_INVALID_LEVEL;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -675,7 +667,7 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_PROMOTE_NOT_YOURSELF;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -688,7 +680,7 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
         CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
         Paquet out;
         out << SMSG_PROMOTE_ERROR;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -697,7 +689,7 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
         //Compte non trouvé
         Paquet out;
         out << SMSG_PROMOTE_ACCT_DOESNT_EXIST;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -708,14 +700,14 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
     {
         Paquet out;
         out << SMSG_NO_INTERACT_HIGHER_LEVEL;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
     if (acctLevel > client->getAuthLevel())
     {
         Paquet out;
         out << SMSG_PROMOTE_LEVEL_TOO_HIGH;
-        out.send(client->getSocket());
+        out >> client->getSocket();
         return;
     }
 
@@ -733,13 +725,12 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
         clientAModifier->setAuthLevel(level);
 
         out << SMSG_PROMOTED;
-        out << client->getPseudo();
-        out << level;
-        out.send(clientAModifier->getSocket());
+        out << client->getPseudo() << level;
+        out >> clientAModifier->getSocket();
         out.clear();
     }
 
     out << SMSG_PROMOTE_OK;
-    out.send(client->getSocket());
+    out >> client->getSocket();
     return;
 }

@@ -18,43 +18,43 @@ Paquet::Paquet(const Paquet &paquet) : m_paquet(paquet.m_paquet), m_stream(&m_pa
 
 
 
-Paquet Paquet::operator<<(const quint8 &val)
+Paquet& Paquet::operator<<(const quint8 &val)
 {
     m_stream << val;
     return *this;
 }
 
-Paquet Paquet::operator<<(const quint16 &val)
+Paquet& Paquet::operator<<(const quint16 &val)
 {
     m_stream << val;
     return *this;
 }
 
-Paquet Paquet::operator<<(const quint32 &val)
+Paquet& Paquet::operator<<(const quint32 &val)
 {
     m_stream << val;
     return *this;
 }
 
-Paquet Paquet::operator<<(const quint64 &val)
+Paquet& Paquet::operator<<(const quint64 &val)
 {
     m_stream << val;
     return *this;
 }
 
-Paquet Paquet::operator<<(const QString &val)
+Paquet& Paquet::operator<<(const QString &val)
 {
     m_stream << val;
     return *this;
 }
 
-Paquet Paquet::operator<<(const OpCodeValues &val)
+Paquet& Paquet::operator<<(const OpCodeValues &val)
 {
     m_stream << (quint16) val;
     return *this;
 }
 
-Paquet Paquet::operator<<(const QByteArray &val)
+Paquet& Paquet::operator<<(const QByteArray &val)
 {
     m_stream << (QByteArray) val;
     return *this;
@@ -62,44 +62,46 @@ Paquet Paquet::operator<<(const QByteArray &val)
 
 
 
-Paquet Paquet::operator>>(quint8 &val)
+Paquet& Paquet::operator>>(quint8 &val)
 {
     m_stream >> val;
     return *this;
 }
 
-Paquet Paquet::operator>>(quint16 &val)
+Paquet& Paquet::operator>>(quint16 &val)
 {
     m_stream >> val;
     return *this;
 }
 
-Paquet Paquet::operator>>(quint32 &val)
+Paquet& Paquet::operator>>(quint32 &val)
 {
     m_stream >> val;
     return *this;
 }
 
-Paquet Paquet::operator>>(quint64 &val)
+Paquet& Paquet::operator>>(quint64 &val)
 {
     m_stream >> val;
     return *this;
 }
 
-Paquet Paquet::operator>>(QString &val)
+Paquet& Paquet::operator>>(QString &val)
 {
     m_stream >> val;
     return *this;
 }
 
-Paquet Paquet::operator>>(QByteArray &val)
+Paquet& Paquet::operator>>(QByteArray &val)
 {
     m_stream >> val;
     return *this;
 }
 
-
-
+bool Paquet::operator>>(QTcpSocket *socket)
+{
+    return send(socket);
+}
 
 bool Paquet::send(QTcpSocket *socket)
 {

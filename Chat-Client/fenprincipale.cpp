@@ -52,9 +52,8 @@ void FenPrincipale::on_envoyer_clicked()
     if (m_socket->isWritable() && !msg.isEmpty())
     {
         Paquet out;
-        out << CMSG_CHAT_MESSAGE;
-        out << msg;
-        out.send(m_socket);
+        out << CMSG_CHAT_MESSAGE << msg;
+        out >> m_socket;
     }
 
     ui->message->clear(); // On vide la zone d'écriture du message
@@ -109,12 +108,8 @@ void FenPrincipale::connecte()
 
     //On demande au serveur de nous attribuer un pseudo.
     Paquet out;
-    out << CMSG_AUTH_LOGIN;
-    out << ui->login->text();
-    out << pwhash;
-    out << ui->pseudo->text();
-
-    out.send(m_socket);
+    out << CMSG_AUTH_LOGIN << ui->login->text() << pwhash << ui->pseudo->text();
+    out >> m_socket;
 
     //On sélectionne la zone de message.
     ui->message->setFocus();
@@ -273,8 +268,7 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
     case SMSG_CHAT_MESSAGE:
         {
             QString pseudo, message;
-            *in >> pseudo;
-            *in >> message;
+            *in >> pseudo >> message;
 
             message = "<strong>&lt;" + pseudo + "&gt;</strong> " + message;
 
@@ -310,8 +304,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
     case SMSG_USER_RENAMED:
         {
             QString ancienPseudo, nouveauPseudo;
-            *in >> ancienPseudo;
-            *in >> nouveauPseudo;
+            *in >> ancienPseudo >> nouveauPseudo;
 
             //Si l'ancien pseudo correspond à notre pseudo, on fait la mise à jour.
             if (m_pseudo == ancienPseudo)
@@ -323,8 +316,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
     case SMSG_USER_KICKED:
         {
             QString pseudo, kickPar;
-            *in >> kickPar;
-            *in >> pseudo;
+            *in >> kickPar >> pseudo;
 
             CHAT("<em> " + pseudo + " a été kické par " + kickPar + ".</em>");
             break;
@@ -332,8 +324,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
     case SMSG_USER_BANNED:
         {
             QString pseudo, banPar;
-            *in >> banPar;
-            *in >> pseudo;
+            *in >> banPar >> pseudo;
 
             CHAT("<em> " + pseudo + " a été banni par " + banPar + ".</em>");
             break;
@@ -341,8 +332,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
     case SMSG_USER_VOICED:
         {
             QString pseudo, voicePar;
-            *in >> pseudo;
-            *in >> voicePar;
+            *in >> pseudo >> voicePar;
 
             CHAT("<em> " + pseudo + " a été voicé par " + voicePar + ".</em>");
             break;
@@ -360,8 +350,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             QString pseudo;
             quint8 level;
 
-            *in >> pseudo;
-            *in >> level;
+            *in >> pseudo >> level;
 
             CHAT("<em>" + pseudo + " a modifié votre niveau d'administration au niveau " + QString::number(level) + ".</em>");
             break;
@@ -378,9 +367,8 @@ void FenPrincipale::handlePing(Paquet *in, quint16 opCode)
     *in >> time;
 
     Paquet out;
-    out << CMSG_PONG;
-    out << time;
-    out.send(m_socket);
+    out << CMSG_PONG << time;
+    out >> m_socket;
 }
 
 void FenPrincipale::handleRegister(Paquet *in, quint16 opCode)
@@ -438,9 +426,8 @@ void FenPrincipale::handleChatCommands(QString &msg)
             pseudo += args[i];
 
         Paquet out;
-        out << CMSG_SET_NICK;
-        out << pseudo;
-        out.send(m_socket);
+        out << CMSG_SET_NICK << pseudo;
+        out >> m_socket;
     }
     else if (args[0] == "/afk")
     {
@@ -456,7 +443,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
             m_pseudo += "_AFK";
             out << m_pseudo;
         }
-        out.send(m_socket);
+        out >> m_socket;
     }
     else if (args[0] == "/quit")
     {
@@ -491,7 +478,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
         out << CMSG_REGISTER;
         out << args[1]; //Login
         out << QCryptographicHash::hash(pw, QCryptographicHash::Sha1);  //Hash mdp
-        out.send(m_socket);
+        out >> m_socket;
     }
     else if (args[0] == "/kick")
     {
@@ -504,9 +491,8 @@ void FenPrincipale::handleChatCommands(QString &msg)
         }
 
         Paquet out;
-        out << CMSG_KICK;
-        out << args[1]; //Qui kicker
-        out.send(m_socket);
+        out << CMSG_KICK << args[1]; //Qui kicker
+        out >> m_socket;
     }
     else if (args[0] == "/ban")
     {
@@ -519,9 +505,8 @@ void FenPrincipale::handleChatCommands(QString &msg)
         }
 
         Paquet out;
-        out << CMSG_BAN;
-        out << args[1]; //Qui bannir
-        out.send(m_socket);
+        out << CMSG_BAN << args[1]; //Qui bannir
+        out >> m_socket;
     }
     else if (args[0] == "/voice")
     {
@@ -534,9 +519,8 @@ void FenPrincipale::handleChatCommands(QString &msg)
         }
 
         Paquet out;
-        out << CMSG_VOICE;
-        out << args[1]; //Qui voicer
-        out.send(m_socket);
+        out << CMSG_VOICE << args[1]; //Qui voicer
+        out >> m_socket;
     }
     else if (args[0] == "/setlevel")
     {
@@ -552,7 +536,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
         out << CMSG_PROMOTE;
         out << args[1]; //Compte à promouvoir
         out << (quint8) args[2].toUInt(); //Level
-        out.send(m_socket);
+        out >> m_socket;
     }
     else
     {
