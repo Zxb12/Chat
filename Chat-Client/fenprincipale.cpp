@@ -196,11 +196,41 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
         CHAT("ERREUR: Ce compte est déjà connecté.");
         break;
     case SMSG_AUTH_ACCT_BANNED:
-        CHAT("ERREUR: Ce compte a été banni.");
-        break;
+        {
+            QDateTime finBan = QDateTime::currentDateTime();
+            quint32 duree;
+            QString raison;
+            *in >> duree >> raison;
+            if (duree)  //Cas d'un ban à durée déterminée.
+            {
+                finBan.addSecs(duree);
+                CHAT("ERREUR: Ce compte a été banni. Fin du ban le: " + finBan.toString());
+            }
+            else        //Cas d'un ban définitif.
+            {
+                CHAT("ERREUR: Ce compte a été banni définitivement.");
+            }
+            CHAT("Raison: " + raison);
+            break;
+        }
     case SMSG_AUTH_IP_BANNED:
-        CHAT("ERREUR: Votre IP a été bannie");
-        break;
+        {
+            QDateTime finBan = QDateTime::currentDateTime();
+            quint32 duree;
+            QString raison;
+            *in >> duree >> raison;
+            if (duree)  //Cas d'un ban à durée déterminée.
+            {
+                finBan = finBan.addSecs(duree);
+                CHAT("ERREUR: Votre IP a été bannie. Fin du ban le: " + finBan.toString());
+            }
+            else        //Cas d'un ban définitif.
+            {
+                CHAT("ERREUR: Votre IP a été bannie définitivement.");
+            }
+            CHAT("Raison: " + raison);
+            break;
+        }
     case SMSG_AUTH_ERROR:
         CHAT("ERREUR: Erreur d'authentifiation.");
         break;
@@ -528,8 +558,36 @@ void FenPrincipale::handleChatCommands(QString &msg)
             return;
         }
 
+        quint32 duree = 0;  //0 = ban infini.
+        QDateTime finBan = QDateTime::currentDateTime();
+
+        //On essaie d'extraire le temps du ban.
+        if (args.size() >= 4)
+        {
+            bool ok = false;
+            duree = args[2].toUInt(&ok);
+            if (ok)
+            {
+                //On ajoute la durée correspondante à la durée de ban.
+                if      (args[3].toLower() == "min" || args[3].toLower() == "minute" || args[3].toLower() == "minutes")
+                    finBan = finBan.addSecs(duree * 60);
+                else if (args[3].toLower() == "h" || args[3].toLower() == "hour" || args[3].toLower() == "hours")
+                    finBan = finBan.addSecs(duree * 60 * 60);
+                else if (args[3].toLower() == "d" || args[3].toLower() == "day" || args[3].toLower() == "days")
+                    finBan = finBan.addDays(duree);
+                else if (args[3].toLower() == "mon" || args[3].toLower() == "month" || args[3].toLower() == "months")
+                    finBan = finBan.addMonths(duree);
+                else if (args[3].toLower() == "y" || args[3].toLower() == "year" || args[3].toLower() == "years")
+                    finBan = finBan.addYears(duree);
+                duree = QDateTime::currentDateTime().secsTo(finBan);
+            }
+        }
+
+        //On essaie d'extraire la raison de ban.
+        QString raison = msg.section('\"', 1, 1);
+
         Paquet out;
-        out << CMSG_BAN << args[1]; //Qui bannir
+        out << CMSG_BAN << args[1] << duree << raison;
         out >> m_socket;
     }
     else if (args[0] == "/voice")

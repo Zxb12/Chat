@@ -192,10 +192,51 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     pseudo = pseudo.simplified();
     pseudo.remove(' '); //On supprime tous les espaces du pseudo.
 
+    //On vérifie le ban IP
+    QSqlQuery query;
+    query.prepare("SELECT * FROM ban_ip WHERE ip = :ip");
+    query.bindValue(":ip", client->getSocket()->peerAddress().toString());
+    if (!query.exec())
+    {
+        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        Paquet out;
+        out << SMSG_AUTH_ERROR;
+        out >> client->getSocket();
+        kickClient(client);
+        return;
+    }
+
+    if (query.next())
+    {
+        //On a trouvé un enregistrement de ban
+        QDateTime finBan = query.value(2).toDateTime();
+        if (finBan < QDateTime::currentDateTime() && !(finBan == query.value(1).toDateTime()))  //Si on n'a pas un ban infini
+        {
+            //Le ban est terminé, on le supprime.
+            query.prepare("DELETE FROM ban_ip WHERE ip = :ip");
+            query.bindValue(":ip", client->getSocket()->peerAddress().toString());
+            if (!query.exec())
+                CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        }
+        else
+        {
+            //Le compte est banni.
+            Paquet out;
+            out << SMSG_AUTH_IP_BANNED;
+            if (finBan != query.value(1).toDateTime())
+                out << (quint32) QDateTime::currentDateTime().secsTo(finBan);
+            else
+                out << (quint32) 0;
+            out << query.value(4).toString();
+            out >> client->getSocket();
+            kickClient(client);
+            return;
+        }
+    }
+
     //Notre client a spécifié un compte
     if (!login.isEmpty())
     {
-        QSqlQuery query;
         query.prepare("SELECT * FROM account where login = :login AND pwhash = :pwhash");
         query.bindValue(":login", login);
         query.bindValue(":pwhash", pwhash);
@@ -234,7 +275,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
         {
             //On a trouvé un enregistrement de ban
             QDateTime finBan = query.value(2).toDateTime();
-            if (finBan < QDateTime::currentDateTime())
+            if (finBan < QDateTime::currentDateTime() && !(finBan == query.value(1).toDateTime()))  //Si on n'a pas un ban infini
             {
                 //Le ban est terminé, on le supprime.
                 query.prepare("DELETE FROM ban_account WHERE account_id = :id");
@@ -247,7 +288,11 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
                 //Le compte est banni.
                 Paquet out;
                 out << SMSG_AUTH_ACCT_BANNED;
-                out << (quint32) QDateTime::currentDateTime().secsTo(finBan);
+                if (finBan != query.value(1).toDateTime())
+                    out << (quint32) QDateTime::currentDateTime().secsTo(finBan);
+                else
+                    out << (quint32) 0;
+                out << query.value(4).toString();
                 out >> client->getSocket();
                 kickClient(client);
                 return;
@@ -572,7 +617,10 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
 
     //On vérifie que la personne existe
     QString pseudo, raison;
-    *in >> pseudo >> raison;
+    quint32 duree;
+    *in >> pseudo >> duree >> raison;
+
+    raison.simplified();
 
     if (raison.isEmpty())
         raison = "No reason set.";
@@ -606,6 +654,31 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
         return;
     }
 
+    //On enregistre le ban si le client est connecté avec un compte.
+    QSqlQuery query;
+    if (!clientABannir->getAccount().isEmpty())
+    {
+        query.prepare("INSERT INTO ban_account (account_id, bandate, unbandate, bannedby, reason) "
+                      "VALUES (:id, :bandate, :unbandate, :bannedby, :reason)");
+        query.bindValue(":id", clientABannir->getIdCompte());
+        query.bindValue(":bandate", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss:zzz"));
+        query.bindValue(":unbandate", QDateTime::currentDateTime().addSecs(duree).toString("yyyy-MM-dd hh:mm:ss:zzz"));
+        query.bindValue(":bannedby", client->getPseudo());
+        query.bindValue(":reason", raison);
+        if (!query.exec())
+            CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+    }
+
+    //Ainsi que le ban IP.
+    query.prepare("INSERT INTO ban_ip (ip, bandate, unbandate, bannedby, reason) "
+                  "VALUES (:ip, :bandate, :unbandate, :bannedby, :reason)");
+    query.bindValue(":ip", clientABannir->getSocket()->peerAddress().toString());
+    query.bindValue(":bandate", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss:zzz"));
+    query.bindValue(":unbandate", QDateTime::currentDateTime().addSecs(duree).toString("yyyy-MM-dd hh:mm:ss:zzz"));
+    query.bindValue(":bannedby", client->getPseudo());
+    query.bindValue(":reason", raison);
+    if (!query.exec())
+        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
 
     //On annonce le ban
     Paquet out;
@@ -613,18 +686,6 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
     out << client->getPseudo(); //On dit qui a banni.
     out << clientABannir->getPseudo(); //On prend le pseudo réel (majuscules...)
     envoyerATous(out);
-
-    //On enregistre le ban
-    QSqlQuery query;
-    query.prepare("INSERT INTO ban_account (account_id, bandate, unbandate, bannedby, reason) "
-                  "VALUES (:id, :bandate, :unbandate, :bannedby, :reason)");
-    query.bindValue(":id", clientABannir->getIdCompte());
-    query.bindValue(":bandate", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss:zzz"));
-    query.bindValue(":unbandate", QDateTime::currentDateTime().addSecs(300).toString("yyyy-MM-dd hh:mm:ss:zzz"));
-    query.bindValue(":bannedby", client->getPseudo());
-    query.bindValue(":reason", raison);
-    if (!query.exec())
-        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
 
     //On kick le client.
     kickClient(clientABannir);
