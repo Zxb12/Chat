@@ -562,8 +562,13 @@ void FenPrincipale::handleKick(Paquet *in, Client *client)
     }
 
     //On vérifie que la personne existe
-    QString pseudo;
-    *in >> pseudo;
+    QString pseudo, raison;
+    *in >> pseudo >> raison;
+
+    raison.simplified();
+
+    if (raison.isEmpty())
+        raison = "No reason set.";
 
     Client* clientAKicker = NULL;
     foreach (Client *i_client, m_clients)
@@ -598,6 +603,7 @@ void FenPrincipale::handleKick(Paquet *in, Client *client)
     out << SMSG_USER_KICKED;
     out << client->getPseudo(); //On dit qui a kické.
     out << clientAKicker->getPseudo(); //On prend le pseudo réel (majuscules...)
+    out << raison;
     envoyerATous(out);
 
     //On kicke le client.
@@ -685,6 +691,7 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
     out << SMSG_USER_BANNED;
     out << client->getPseudo(); //On dit qui a banni.
     out << clientABannir->getPseudo(); //On prend le pseudo réel (majuscules...)
+    out << raison;
     envoyerATous(out);
 
     //On kick le client.

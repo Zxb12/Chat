@@ -311,18 +311,18 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
         }
     case SMSG_USER_KICKED:
         {
-            QString pseudo, kickPar;
-            *in >> kickPar >> pseudo;
+            QString pseudo, kickPar, raison;
+            *in >> kickPar >> pseudo >> raison;
 
-            CHAT("<em> " + pseudo + " a été kické par " + kickPar + ".</em>");
+            CHAT("<em> " + pseudo + " a été kické par " + kickPar + ". Raison: " + raison + "</em>");
             break;
         }
     case SMSG_USER_BANNED:
         {
-            QString pseudo, banPar;
-            *in >> banPar >> pseudo;
+            QString pseudo, banPar, raison;
+            *in >> banPar >> pseudo >> raison;
 
-            CHAT("<em> " + pseudo + " a été banni par " + banPar + ".</em>");
+            CHAT("<em> " + pseudo + " a été banni par " + banPar + ". Raison: " + raison + "</em>");
             break;
         }
     case SMSG_USER_VOICED:
@@ -544,8 +544,11 @@ void FenPrincipale::handleChatCommands(QString &msg)
             return;
         }
 
+        //On essaie d'extraire la raison de ban.
+        QString raison = msg.section('\"', 1, 1);
+
         Paquet out;
-        out << CMSG_KICK << args[1]; //Qui kicker
+        out << CMSG_KICK << args[1] << raison;
         out >> m_socket;
     }
     else if (args[0] == "/ban")
