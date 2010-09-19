@@ -635,7 +635,7 @@ void FenPrincipale::handleVoice(Paquet *in, Client *client)
 
 }
 
-void FenPrincipale::handlePromote(Paquet *in, Client *client)
+void FenPrincipale::handleLevelMod(Paquet *in, Client *client)
 {
     QString login;
     quint8 level;
@@ -659,7 +659,7 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
     if (level > LVL_MAX || level < 1)
     {
         Paquet out;
-        out << SMSG_PROMOTE_INVALID_LEVEL;
+        out << SMSG_LVL_MOD_INVALID_LEVEL;
         out >> client->getSocket();
         return;
     }
@@ -668,7 +668,7 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
     if (login == client->getAccount())
     {
         Paquet out;
-        out << SMSG_PROMOTE_NOT_YOURSELF;
+        out << SMSG_LVL_MOD_NOT_YOURSELF;
         out >> client->getSocket();
         return;
     }
@@ -690,7 +690,7 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
     {
         //Compte non trouvé
         Paquet out;
-        out << SMSG_PROMOTE_ACCT_DOESNT_EXIST;
+        out << SMSG_LVL_MOD_ACCT_DOESNT_EXIST;
         out >> client->getSocket();
         return;
     }
@@ -708,7 +708,7 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
     if (acctLevel > client->getAuthLevel())
     {
         Paquet out;
-        out << SMSG_PROMOTE_LEVEL_TOO_HIGH;
+        out << SMSG_LVL_MOD_LEVEL_TOO_HIGH;
         out >> client->getSocket();
         return;
     }
@@ -726,13 +726,13 @@ void FenPrincipale::handlePromote(Paquet *in, Client *client)
     {
         clientAModifier->setAuthLevel(level);
 
-        out << SMSG_PROMOTED;
+        out << SMSG_LVL_CHANGED;
         out << client->getPseudo() << level;
         out >> clientAModifier->getSocket();
         out.clear();
     }
 
-    out << SMSG_PROMOTE_OK;
+    out << SMSG_LVL_MOD_OK;
     out >> client->getSocket();
     return;
 }

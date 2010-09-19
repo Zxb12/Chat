@@ -352,21 +352,21 @@ void FenPrincipale::handleLevelMod(Paquet *in, quint16 opCode)
     switch (opCode)
     {
     case SMSG_PROMOTE_ERROR:
-        CHAT("ERREUR: La promotion a échoué.");
+        CHAT("ERREUR: La modification du niveau a échoué.");
         break;
-    case SMSG_PROMOTE_INVALID_LEVEL:
+    case SMSG_LVL_MOD_INVALID_LEVEL:
         CHAT("ERREUR: Ce niveau d'administration n'existe pas.");
         break;
-    case SMSG_PROMOTE_ACCT_DOESNT_EXIST:
-        CHAT("ERREUR: Promotion échouée, le compte n'existe pas.");
+    case SMSG_LVL_MOD_ACCT_DOESNT_EXIST:
+        CHAT("ERREUR: Modification échouée, le compte n'existe pas.");
         break;
-    case SMSG_PROMOTE_LEVEL_TOO_HIGH:
-        CHAT("ERREUR: Promotion échouée, nous ne pouvez pas promouvoir un compte au-delà de votre niveau.");
+    case SMSG_LVL_MOD_LEVEL_TOO_HIGH:
+        CHAT("ERREUR: Modification échouée, nous ne pouvez pas modifier le niveau d'un compte au-delà de votre niveau.");
         break;
-    case SMSG_PROMOTE_NOT_YOURSELF:
-        CHAT("ERREUR: Vous ne pouvez pas vous promouvoir vous-même.");
+    case SMSG_LVL_MOD_NOT_YOURSELF:
+        CHAT("ERREUR: Vous ne pouvez pas modifier votre niveau..");
         break;
-    case SMSG_PROMOTE_OK:
+    case SMSG_LVL_MOD_OK:
         {
             QString compte;
             *in >> compte;
@@ -374,7 +374,7 @@ void FenPrincipale::handleLevelMod(Paquet *in, quint16 opCode)
             CHAT("<em>Le niveau du compte " + compte + " a été changé.</em>");
             break;
         }
-    case SMSG_PROMOTED:
+    case SMSG_LVL_CHANGED:
         {
             QString pseudo;
             quint8 level;
@@ -557,7 +557,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
         }
 
         Paquet out;
-        out << CMSG_PROMOTE;
+        out << CMSG_LVL_MOD;
         out << args[1]; //Compte à promouvoir
         out << (quint8) args[2].toUInt(); //Level
         out >> m_socket;

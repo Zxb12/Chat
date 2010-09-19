@@ -51,7 +51,7 @@ public:
     void handleKick(Paquet*, Client*);
     void handleBan(Paquet*, Client*);
     void handleVoice(Paquet*, Client*);
-    void handlePromote(Paquet*, Client*);
+    void handleLevelMod(Paquet*, Client*);
 
 
 public slots:
