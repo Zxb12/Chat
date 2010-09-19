@@ -7,10 +7,13 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
 {
     ui->setupUi(this);
 
+    if (!chargerFichier())
+        CONSOLE("ERREUR: Impossible d'ouvrir le fichier de configuration server.conf");
+
     m_serveur = new QTcpServer(this);
 
     //Démarrage du serveur
-    if (!m_serveur->listen(QHostAddress::Any, PORT_SERVEUR))
+    if (!m_serveur->listen(QHostAddress::Any, m_serverPort))
     {
         //Erreur de démarrage
         ui->etatServeur->setText("Le serveur n'a pas pu démarrer : " + m_serveur->errorString());
@@ -24,36 +27,49 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
     connecterBDD();
 }
 
-void FenPrincipale::connecterBDD()
+bool FenPrincipale::chargerFichier()
 {
     QFile confFile("server.conf");
     if (confFile.open(QIODevice::ReadOnly))
     {
 
         //Chargement depuis le fichier.
-        QString address = QString(confFile.readLine()).remove("SQL_ADDRESS=").remove("\r\n");
-        QString database = QString(confFile.readLine()).remove("SQL_DATABASE=").remove("\r\n");
-        QString login = QString(confFile.readLine()).remove("SQL_LOGIN=").remove("\r\n");
-        QString pass = QString(confFile.readLine()).remove("SQL_PASSWORD=").remove("\r\n");
+        m_serverPort =              QString(confFile.readLine()).remove("SERVER_PORT=").remove("\r\n").toInt();
+        m_SQLAdresse =              QString(confFile.readLine()).remove("SQL_ADDRESS=").remove("\r\n");
+        m_SQLDatabase =             QString(confFile.readLine()).remove("SQL_DATABASE=").remove("\r\n");
+        m_SQLLogin =                QString(confFile.readLine()).remove("SQL_LOGIN=").remove("\r\n");
+        m_SQLPassword =             QString(confFile.readLine()).remove("SQL_PASSWORD=").remove("\r\n");
+        m_nickMinLength =           QString(confFile.readLine()).remove("NICK_MIN_LENGTH=").remove("\r\n").toInt();
+        m_accountNameMinLength =    QString(confFile.readLine()).remove("ACCOUT_NAME_MIN_LENGTH=").remove("\r\n").toInt();
+        m_levelMax =                QString(confFile.readLine()).remove("LVL_MAX=").remove("\r\n").toInt();
+        m_registerLevel =           QString(confFile.readLine()).remove("REGISTER_LVL=").remove("\r\n").toInt();
+        m_kickLevel =               QString(confFile.readLine()).remove("KICK_LVL=").remove("\r\n").toInt();
+        m_banLevel =                QString(confFile.readLine()).remove("BAN_LVL=").remove("\r\n").toInt();
+        m_voiceLevel =              QString(confFile.readLine()).remove("VOICE_LVL=").remove("\r\n").toInt();
+        m_promoteLevel =            QString(confFile.readLine()).remove("PROMOTE_LVL=").remove("\r\n").toInt();
 
-        //Ouverture de la BDD
-        QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
-        db.setHostName(address);
-        db.setDatabaseName(database);
-        bool ok = db.open(login, pass);
-        if (ok)
-        {
-            CONSOLE("Connexion réussie à la BDD");
-        }
-        else
-        {
-            CONSOLE("Connexion échouée à la BDD: " + db.lastError().text());
-            return;
-        }
+        return true;
+    }
+    else
+        return false;
+}
+
+void FenPrincipale::connecterBDD()
+{
+
+    //Ouverture de la BDD
+    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+    db.setHostName(m_SQLAdresse);
+    db.setDatabaseName(m_SQLDatabase);
+    bool ok = db.open(m_SQLLogin, m_SQLPassword);
+    if (ok)
+    {
+        CONSOLE("Connexion réussie à la BDD");
     }
     else
     {
-        CONSOLE("Impossible d'ouvrir server.conf");
+        CONSOLE("Connexion échouée à la BDD: " + db.lastError().text());
+        return;
     }
 }
 
@@ -321,7 +337,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
         authLevel = 0;
     }
     //Vérifie la taille du pseudo
-    if (pseudo.size() < TAILLE_PSEUDO_MIN)
+    if (pseudo.size() < m_nickMinLength)
     {
         CONSOLE("ERREUR: Nommage impossible, pseudo trop court.");
         Paquet out;
@@ -376,7 +392,7 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
     pseudo.remove(' '); //On enlève les espaces du pseudo.
 
     //Vérifie la taille du pseudo
-    if (pseudo.size() < TAILLE_PSEUDO_MIN)
+    if (pseudo.size() < m_nickMinLength)
     {
         CONSOLE("ERREUR: Nommage impossible, pseudo trop court.");
         Paquet out;
@@ -432,7 +448,7 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
     }
 
     //On vérifie que le client a un pseudo valide.
-    if (pseudo.size() < TAILLE_PSEUDO_MIN)
+    if (pseudo.size() < m_nickMinLength)
     {
         Paquet out;
         out << SMSG_INVALID_NICK;
@@ -484,7 +500,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
     *in >> login >> pwhash;
 
     //Vérification des droits.
-    if (client->getAuthLevel() < REGISTER_LVL)
+    if (client->getAuthLevel() < m_registerLevel)
     {
         Paquet out;
         out << SMSG_NOT_AUTHORIZED;
@@ -497,7 +513,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
     pwhash = pwhash.toHex();
 
     //Vérification de la taille du login
-    if (login.size() < TAILLE_COMPTE_MIN)
+    if (login.size() < m_accountNameMinLength)
     {
         Paquet out;
         out << SMSG_REG_INVALID_NICK;
@@ -553,7 +569,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
 void FenPrincipale::handleKick(Paquet *in, Client *client)
 {
     //On vérifie le niveau d'authentification
-    if (client->getAuthLevel() < KICK_LVL)
+    if (client->getAuthLevel() < m_kickLevel)
     {
         Paquet out;
         out << SMSG_NOT_AUTHORIZED;
@@ -613,7 +629,7 @@ void FenPrincipale::handleKick(Paquet *in, Client *client)
 void FenPrincipale::handleBan(Paquet *in, Client *client)
 {
     //On vérifie le niveau d'authentification
-    if (client->getAuthLevel() < BAN_LVL)
+    if (client->getAuthLevel() < m_kickLevel)
     {
         Paquet out;
         out << SMSG_NOT_AUTHORIZED;
@@ -724,7 +740,7 @@ void FenPrincipale::handleLevelMod(Paquet *in, Client *client)
     }
 
     //Vérification du niveau
-    if (level > LVL_MAX || level < 1)
+    if (level > m_levelMax || level < 1)
     {
         Paquet out;
         out << SMSG_LVL_MOD_INVALID_LEVEL;
