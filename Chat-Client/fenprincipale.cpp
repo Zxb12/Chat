@@ -204,12 +204,6 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
     case SMSG_AUTH_ERROR:
         CHAT("ERREUR: Erreur d'authentifiation.");
         break;
-    case SMSG_NICK_ALREADY_IN_USE:
-        CHAT("ERREUR: Impossible de se nommer ainsi, le pseudo est déjà utilisé.");
-        break;
-    case SMSG_NICK_TOO_SHORT:
-        CHAT("ERREUR: Pseudo trop court.");
-        break;
     case SMSG_AUTH_OK:
         CHAT("Authentification réussie.");
 
@@ -235,36 +229,6 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
 {
     switch (opCode)
     {
-    case SMSG_INVALID_MESSAGE:
-        CHAT("ERREUR: Le message envoyé est invalide");
-        break;
-    case SMSG_INVALID_NICK:
-        CHAT("ERREUR: Impossible d'envoyer un message, votre pseudo est invalide ou indéfini.");
-        break;
-    case SMSG_NOT_AUTHORIZED:
-        CHAT("ERREUR: Vous ne disposez pas des privilèges suffisants.");
-        break;
-    case SMSG_USER_DOESNT_EXIST:
-        CHAT("ERREUR: L'utilisateur spécifié n'existe pas");
-        break;
-    case SMSG_PROMOTE_ERROR:
-        CHAT("ERREUR: La promotion a échoué.");
-        break;
-    case SMSG_PROMOTE_INVALID_LEVEL:
-        CHAT("ERREUR: Ce niveau d'administration n'existe pas.");
-        break;
-    case SMSG_PROMOTE_ACCT_DOESNT_EXIST:
-        CHAT("ERREUR: Promotion échouée, le compte n'existe pas.");
-        break;
-    case SMSG_PROMOTE_LEVEL_TOO_HIGH:
-        CHAT("ERREUR: Promotion échouée, nous ne pouvez pas promouvoir un compte au-delà de votre niveau.");
-        break;
-    case SMSG_PROMOTE_NOT_YOURSELF:
-        CHAT("ERREUR: Vous ne pouvez pas vous promouvoir vous-même.");
-        break;
-    case SMSG_NO_INTERACT_HIGHER_LEVEL:
-        CHAT("ERREUR: Impossible d'interagir avec un compte de niveau spérieur ou égal au vôtre.");
-        break;
     case SMSG_CHAT_MESSAGE:
         {
             QString pseudo, message;
@@ -339,24 +303,6 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             CHAT("<em> " + pseudo + " a été voicé par " + voicePar + ".</em>");
             break;
         }
-    case SMSG_PROMOTE_OK:
-        {
-            QString compte;
-            *in >> compte;
-
-            CHAT("<em>Le niveau du compte " + compte + " a été changé.</em>");
-            break;
-        }
-    case SMSG_PROMOTED:
-        {
-            QString pseudo;
-            quint8 level;
-
-            *in >> pseudo >> level;
-
-            CHAT("<em>" + pseudo + " a modifié votre niveau d'administration au niveau " + QString::number(level) + ".</em>");
-            break;
-        }
     default:
         CONSOLE("ERREUR: Paquet non géré dans handleUserModification");
         break;
@@ -399,6 +345,82 @@ void FenPrincipale::handleRegister(Paquet *in, quint16 opCode)
         CONSOLE("ERREUR: Paquet non géré dans handleRegister");
         break;
     }
+}
+
+void FenPrincipale::handleLevelMod(Paquet *in, quint16 opCode)
+{
+    switch (opCode)
+    {
+    case SMSG_PROMOTE_ERROR:
+        CHAT("ERREUR: La promotion a échoué.");
+        break;
+    case SMSG_PROMOTE_INVALID_LEVEL:
+        CHAT("ERREUR: Ce niveau d'administration n'existe pas.");
+        break;
+    case SMSG_PROMOTE_ACCT_DOESNT_EXIST:
+        CHAT("ERREUR: Promotion échouée, le compte n'existe pas.");
+        break;
+    case SMSG_PROMOTE_LEVEL_TOO_HIGH:
+        CHAT("ERREUR: Promotion échouée, nous ne pouvez pas promouvoir un compte au-delà de votre niveau.");
+        break;
+    case SMSG_PROMOTE_NOT_YOURSELF:
+        CHAT("ERREUR: Vous ne pouvez pas vous promouvoir vous-même.");
+        break;
+    case SMSG_PROMOTE_OK:
+        {
+            QString compte;
+            *in >> compte;
+
+            CHAT("<em>Le niveau du compte " + compte + " a été changé.</em>");
+            break;
+        }
+    case SMSG_PROMOTED:
+        {
+            QString pseudo;
+            quint8 level;
+
+            *in >> pseudo >> level;
+
+            CHAT("<em>" + pseudo + " a modifié votre niveau d'administration au niveau " + QString::number(level) + ".</em>");
+            break;
+        }
+    default:
+        CONSOLE("ERREUR: Paquet non géré dans handleLevelMod");
+        break;
+    }
+
+}
+
+void FenPrincipale::handleError(Paquet *in, quint16 opCode)
+{
+    switch (opCode)
+    {
+    case SMSG_NICK_ALREADY_IN_USE:
+        CHAT("ERREUR: Impossible de se nommer ainsi, le pseudo est déjà utilisé.");
+        break;
+    case SMSG_NICK_TOO_SHORT:
+        CHAT("ERREUR: Pseudo trop court.");
+        break;
+    case SMSG_INVALID_MESSAGE:
+        CHAT("ERREUR: Le message envoyé est invalide");
+        break;
+    case SMSG_INVALID_NICK:
+        CHAT("ERREUR: Impossible d'envoyer un message, votre pseudo est invalide ou indéfini.");
+        break;
+    case SMSG_NOT_AUTHORIZED:
+        CHAT("ERREUR: Vous ne disposez pas des privilèges suffisants.");
+        break;
+    case SMSG_USER_DOESNT_EXIST:
+        CHAT("ERREUR: L'utilisateur spécifié n'existe pas");
+        break;
+    case SMSG_NO_INTERACT_HIGHER_LEVEL:
+        CHAT("ERREUR: Impossible d'interagir avec un compte de niveau spérieur ou égal au vôtre.");
+        break;
+    default:
+        CONSOLE("ERREUR: Paquet non géré dans handleError");
+        break;
+    }
+
 }
 
 void FenPrincipale::handleChatCommands(QString &msg)
