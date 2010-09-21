@@ -8,6 +8,13 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
 {
     ui->setupUi(this);
 
+    QMenu *menu = new QMenu("Chat", this);
+    menu->addAction("Pas d'actions définies !");
+
+    m_sysTray = new QSystemTrayIcon(QIcon("access.png"), this);
+    m_sysTray->setContextMenu(menu);
+    m_sysTray->show();
+
     m_socket = new QTcpSocket(this);
     connect(m_socket, SIGNAL(readyRead()), this, SLOT(donneesRecues()));
     connect(m_socket, SIGNAL(connected()), this, SLOT(connecte()));
@@ -24,6 +31,7 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
 FenPrincipale::~FenPrincipale()
 {
     delete m_socket;
+    delete m_sysTray;
     delete ui;
 }
 
@@ -254,9 +262,17 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
             *in >> pseudo;
             *in >> message;
 
-            message = "<strong>&lt;" + pseudo + "&gt;</strong> " + message;
+            QString messageFormate = "<strong>&lt;" + pseudo + "&gt;</strong> " + message;
 
-            CHAT(message);
+            CHAT(messageFormate);
+
+            //Affichage d'une infobulle si la fenêtre n'a pas le focus.
+            if (!QApplication::focusWidget())
+            {
+                if (m_sysTray->supportsMessages())
+                    m_sysTray->showMessage("Nouveau message de " + pseudo, message,
+                                           QSystemTrayIcon::Information, 1000);
+            }
         }
         break;
     default:

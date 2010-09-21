@@ -7,6 +7,8 @@
 #include <QTcpSocket>
 #include <QTime>
 #include <QCryptographicHash>
+#include <QSystemTrayIcon>
+#include <QMenu>
 
 #include "../shared/paquet.h"
 #include "opcode.h"
@@ -44,6 +46,8 @@ public:
 
 private:
     Ui::FenPrincipale *ui;
+
+    QSystemTrayIcon *m_sysTray;
 
     //Socket
     QTcpSocket *m_socket;
