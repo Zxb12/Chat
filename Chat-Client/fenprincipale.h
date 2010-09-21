@@ -30,6 +30,7 @@ public slots:
     void connecte();
     void deconnecte();
     void erreurSocket(QAbstractSocket::SocketError erreur);
+    void premierPlan();
 
 public:
     void paquetRecu(Paquet*);
@@ -44,6 +45,7 @@ public:
     void handleRegister(Paquet*, quint16);
     void handleLevelMod(Paquet*, quint16);
     void handleError(Paquet*, quint16);
+    void handleWhoIs(Paquet*, quint16);
     void handleChatCommands(QString&);
 
 private:

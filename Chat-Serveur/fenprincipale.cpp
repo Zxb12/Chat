@@ -47,6 +47,7 @@ bool FenPrincipale::chargerFichier()
         m_banLevel =                QString(confFile.readLine()).remove("BAN_LVL=").remove("\r\n").toInt();
         m_voiceLevel =              QString(confFile.readLine()).remove("VOICE_LVL=").remove("\r\n").toInt();
         m_promoteLevel =            QString(confFile.readLine()).remove("PROMOTE_LVL=").remove("\r\n").toInt();
+        m_whoisLevel =              QString(confFile.readLine()).remove("WHOIS_LVL=").remove("\r\n").toInt();
 
         return true;
     }
@@ -817,4 +818,49 @@ void FenPrincipale::handleLevelMod(Paquet *in, Client *client)
     out << SMSG_LVL_MOD_OK;
     out >> client->getSocket();
     return;
+}
+
+void FenPrincipale::handleWhoIs(Paquet *in, Client *client)
+{
+    if (client->getAuthLevel() < m_whoisLevel)
+    {
+        Paquet out;
+        out << SMSG_NOT_AUTHORIZED;
+        out >> client->getSocket();
+        return;
+    }
+
+    QString pseudo;
+    Client *clientCible = NULL;
+    *in >> pseudo;
+
+    //On recherche le client.
+    foreach (Client* i_client, m_clients)
+    {
+        if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == false)
+        {
+            clientCible = i_client;
+            break;
+        }
+    }
+
+    if (!clientCible)
+    {
+        //On n'a pas trouvé de client avec ce pseudo.
+        Paquet out;
+        out << SMSG_USER_DOESNT_EXIST;
+        out >> client->getSocket();
+        return;
+    }
+
+    //On envoie les informations.
+    //Pseudo, compte, niveau, ping, hashIP
+    Paquet out;
+    out << SMSG_WHOIS;
+    out << clientCible->getPseudo();
+    out << clientCible->getAccount();
+    out << clientCible->getAuthLevel();
+    out << clientCible->getPing();
+    out << clientCible->getHashIP();
+    out >> client->getSocket();
 }

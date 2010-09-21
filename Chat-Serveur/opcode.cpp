@@ -46,5 +46,6 @@ OpCodeHandler OpCodeTable[NB_OPCODES] =
     {"SMSG_LVL_MOD_NOT_YOURSELF",           &FenPrincipale::handleServerSide},
     {"SMSG_LVL_CHANGED",                    &FenPrincipale::handleServerSide},
     {"SMSG_NO_INTERACT_HIGHER_LEVEL",       &FenPrincipale::handleServerSide},
-
+    {"CMSG_WHOIS",                          &FenPrincipale::handleWhoIs},
+    {"SMSG_WHOIS",                          &FenPrincipale::handleServerSide},
 };

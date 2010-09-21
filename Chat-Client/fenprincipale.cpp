@@ -483,6 +483,22 @@ void FenPrincipale::handleError(Paquet *in, quint16 opCode)
 
 }
 
+void FenPrincipale::handleWhoIs(Paquet *in, quint16 opCode)
+{
+    QString pseudo, compte;
+    quint8 niveau;
+    quint16 ping;
+    QByteArray hashIP;
+
+    *in >> pseudo >> compte >> niveau >> ping >> hashIP;
+
+    CHAT("Whois: " + pseudo);
+    CHAT("Compte: " + compte);
+    CHAT("Niveau de compte: " + QString::number(niveau));
+    CHAT("Ping: " + QString::number(ping) + "ms");
+    CHAT("Hash de l'IP: " + hashIP);
+}
+
 void FenPrincipale::handleChatCommands(QString &msg)
 {
     //On quitte si le message n'est pas une commande.
@@ -651,6 +667,20 @@ void FenPrincipale::handleChatCommands(QString &msg)
         out << CMSG_LVL_MOD;
         out << args[1]; //Compte à promouvoir
         out << (quint8) args[2].toUInt(); //Level
+        out >> m_socket;
+    }
+    else if (args[0] == "/who" || args[0] == "/whois")
+    {
+        //Si on n'a pas assez d'arguments, on abandonne
+        if (args.size() < 2)
+        {
+            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            msg.clear();
+            return;
+        }
+
+        Paquet out;
+        out << CMSG_WHOIS << args[1];
         out >> m_socket;
     }
     else
