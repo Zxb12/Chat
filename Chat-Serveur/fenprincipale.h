@@ -1,10 +1,6 @@
 #ifndef FENPRINCIPALE_H
 #define FENPRINCIPALE_H
 
-#define PORT_SERVEUR        50180
-#define TAILLE_PSEUDO_MIN   4
-#define TAILLE_COMPTE_MIN   4
-
 #include <QWidget>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -30,6 +26,7 @@ public:
     FenPrincipale(QWidget *parent = 0);
     ~FenPrincipale();
 
+    bool chargerFichier();
     void envoyerATous(Paquet&);
     void connecterBDD();
 
@@ -41,6 +38,10 @@ public:
     void handleChatMessage(Paquet*, Client*);
     void handlePing(Paquet*, Client*);
     void handleRegister(Paquet*, Client*);
+    void handleKick(Paquet*, Client*);
+    void handleBan(Paquet*, Client*);
+    void handleVoice(Paquet*, Client*);
+    void handleLevelMod(Paquet*, Client*);
 
 
 public slots:
@@ -57,6 +58,12 @@ private:
 
     QTcpServer *m_serveur;
     QList<Client *> m_clients;
+
+    //Configuration
+    QString m_SQLAdresse, m_SQLDatabase, m_SQLLogin, m_SQLPassword;
+    quint16 m_serverPort;
+    quint16 m_nickMinLength, m_accountNameMinLength, m_levelMax,
+            m_registerLevel, m_kickLevel, m_banLevel, m_voiceLevel, m_promoteLevel;
 
 };
 

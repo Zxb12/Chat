@@ -6,6 +6,7 @@
 #include <QDataStream>
 #include <QTime>
 #include <QTimer>
+#include <QCryptographicHash>
 
 #include "../shared/paquet.h"
 
@@ -24,6 +25,11 @@ public:
     void setAccount(QString account) { m_account = account; }
     quint8 getAuthLevel() { return m_authLevel; }
     void setAuthLevel(quint8 authLevel) { m_authLevel = authLevel; }
+
+    quint32 getIdCompte() { return m_idCompte; }
+    void setIdCompte(quint32 id) { m_idCompte = id; }
+    QByteArray getHashIP() { return m_hashIP; }
+
     quint8 getPingsPending() { return m_pingsPending; }
     void setPingsPending(quint8 pings) { m_pingsPending = pings; }
     quint16 getPing() { return m_ping; }
@@ -47,6 +53,8 @@ private:
     QString m_pseudo;
     QString m_account;
     quint8 m_authLevel;
+    quint32 m_idCompte;
+    QByteArray m_hashIP;
 
     quint8 m_pingsPending;
     QTimer *m_pingTimer;

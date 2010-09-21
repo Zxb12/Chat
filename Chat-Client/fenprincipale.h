@@ -42,6 +42,8 @@ public:
     void handleUserModification(Paquet*, quint16);
     void handlePing(Paquet*, quint16);
     void handleRegister(Paquet*, quint16);
+    void handleLevelMod(Paquet*, quint16);
+    void handleError(Paquet*, quint16);
     void handleChatCommands(QString&);
 
 private:
