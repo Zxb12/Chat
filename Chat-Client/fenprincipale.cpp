@@ -12,6 +12,7 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
     menu->addAction("Pas d'actions définies !");
 
     m_sysTray = new QSystemTrayIcon(QIcon("access.png"), this);
+    connect(m_sysTray, SIGNAL(messageClicked()), this, SLOT(premierPlan()));
     m_sysTray->setContextMenu(menu);
     m_sysTray->show();
 
@@ -105,6 +106,13 @@ void FenPrincipale::donneesRecues()
     //S'il nous reste quelque chose dans la socket, on relance la fonction.
     if (m_socket->bytesAvailable())
         donneesRecues();
+}
+
+void FenPrincipale::premierPlan()
+{
+    this->raise();
+    this->activateWindow();
+    ui->message->setFocus();
 }
 
 // Ce slot est appelé lorsque la connexion au serveur a réussi
