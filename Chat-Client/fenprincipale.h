@@ -7,6 +7,8 @@
 #include <QTcpSocket>
 #include <QTime>
 #include <QCryptographicHash>
+#include <QSystemTrayIcon>
+#include <QMenu>
 
 #include "../shared/paquet.h"
 #include "opcode.h"
@@ -28,6 +30,7 @@ public slots:
     void connecte();
     void deconnecte();
     void erreurSocket(QAbstractSocket::SocketError erreur);
+    void premierPlan();
 
 public:
     void paquetRecu(Paquet*);
@@ -42,10 +45,13 @@ public:
     void handleRegister(Paquet*, quint16);
     void handleLevelMod(Paquet*, quint16);
     void handleError(Paquet*, quint16);
+    void handleWhoIs(Paquet*, quint16);
     void handleChatCommands(QString&);
 
 private:
     Ui::FenPrincipale *ui;
+
+    QSystemTrayIcon *m_sysTray;
 
     //Socket
     QTcpSocket *m_socket;

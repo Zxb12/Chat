@@ -42,6 +42,7 @@ public:
     void handleBan(Paquet*, Client*);
     void handleVoice(Paquet*, Client*);
     void handleLevelMod(Paquet*, Client*);
+    void handleWhoIs(Paquet*, Client*);
 
 
 public slots:
@@ -63,7 +64,8 @@ private:
     QString m_SQLAdresse, m_SQLDatabase, m_SQLLogin, m_SQLPassword;
     quint16 m_serverPort;
     quint16 m_nickMinLength, m_accountNameMinLength, m_levelMax,
-            m_registerLevel, m_kickLevel, m_banLevel, m_voiceLevel, m_promoteLevel;
+            m_registerLevel, m_kickLevel, m_banLevel, m_voiceLevel, m_promoteLevel,
+            m_whoisLevel;
 
 };
 

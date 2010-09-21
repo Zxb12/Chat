@@ -8,6 +8,14 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
 {
     ui->setupUi(this);
 
+    QMenu *menu = new QMenu("Chat", this);
+    menu->addAction("Pas d'actions définies !");
+
+    m_sysTray = new QSystemTrayIcon(QIcon("access.png"), this);
+    connect(m_sysTray, SIGNAL(messageClicked()), this, SLOT(premierPlan()));
+    m_sysTray->setContextMenu(menu);
+    m_sysTray->show();
+
     m_socket = new QTcpSocket(this);
     connect(m_socket, SIGNAL(readyRead()), this, SLOT(donneesRecues()));
     connect(m_socket, SIGNAL(connected()), this, SLOT(connecte()));
@@ -24,6 +32,7 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
 FenPrincipale::~FenPrincipale()
 {
     delete m_socket;
+    delete m_sysTray;
     delete ui;
 }
 
@@ -96,6 +105,13 @@ void FenPrincipale::donneesRecues()
     //S'il nous reste quelque chose dans la socket, on relance la fonction.
     if (m_socket->bytesAvailable())
         donneesRecues();
+}
+
+void FenPrincipale::premierPlan()
+{
+    this->raise();
+    this->activateWindow();
+    ui->message->setFocus();
 }
 
 // Ce slot est appelé lorsque la connexion au serveur a réussi
@@ -261,12 +277,26 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
     {
     case SMSG_CHAT_MESSAGE:
         {
-            QString pseudo, message;
-            *in >> pseudo >> message;
+            QString pseudo, message, messageRaw;
+            *in >> pseudo >> messageRaw;
+
+            message = messageRaw;
+
+            //Echappement les caractères de balise.
+            message.replace("<", "&lt;");
+            message.replace(">", "&gt;");
 
             message = "<strong>&lt;" + pseudo + "&gt;</strong> " + message;
 
             CHAT(message);
+
+            //Affichage d'une infobulle si la fenêtre n'a pas le focus.
+            if (!QApplication::focusWidget())
+            {
+                if (m_sysTray->supportsMessages())
+                    m_sysTray->showMessage("Nouveau message de " + pseudo, messageRaw,
+                                           QSystemTrayIcon::Information, 1000);
+            }
         }
         break;
     default:
@@ -453,6 +483,22 @@ void FenPrincipale::handleError(Paquet *in, quint16 opCode)
 
 }
 
+void FenPrincipale::handleWhoIs(Paquet *in, quint16 opCode)
+{
+    QString pseudo, compte;
+    quint8 niveau;
+    quint16 ping;
+    QByteArray hashIP;
+
+    *in >> pseudo >> compte >> niveau >> ping >> hashIP;
+
+    CHAT("Whois: " + pseudo);
+    CHAT("Compte: " + compte);
+    CHAT("Niveau de compte: " + QString::number(niveau));
+    CHAT("Ping: " + QString::number(ping) + "ms");
+    CHAT("Hash de l'IP: " + hashIP);
+}
+
 void FenPrincipale::handleChatCommands(QString &msg)
 {
     //On quitte si le message n'est pas une commande.
@@ -621,6 +667,20 @@ void FenPrincipale::handleChatCommands(QString &msg)
         out << CMSG_LVL_MOD;
         out << args[1]; //Compte à promouvoir
         out << (quint8) args[2].toUInt(); //Level
+        out >> m_socket;
+    }
+    else if (args[0] == "/who" || args[0] == "/whois")
+    {
+        //Si on n'a pas assez d'arguments, on abandonne
+        if (args.size() < 2)
+        {
+            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            msg.clear();
+            return;
+        }
+
+        Paquet out;
+        out << CMSG_WHOIS << args[1];
         out >> m_socket;
     }
     else
