@@ -266,19 +266,25 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
         break;
     case SMSG_CHAT_MESSAGE:
         {
-            QString pseudo, message;
+            QString pseudo, message, messageRaw;
             *in >> pseudo;
-            *in >> message;
+            *in >> messageRaw;
 
-            QString messageFormate = "<strong>&lt;" + pseudo + "&gt;</strong> " + message;
+            message = messageRaw;
 
-            CHAT(messageFormate);
+            //Echappement les caractères de balise.
+            message.replace("<", "&lt;");
+            message.replace(">", "&gt;");
+
+            message = "<strong>&lt;" + pseudo + "&gt;</strong> " + message;
+
+            CHAT(message);
 
             //Affichage d'une infobulle si la fenêtre n'a pas le focus.
             if (!QApplication::focusWidget())
             {
                 if (m_sysTray->supportsMessages())
-                    m_sysTray->showMessage("Nouveau message de " + pseudo, message,
+                    m_sysTray->showMessage("Nouveau message de " + pseudo, messageRaw,
                                            QSystemTrayIcon::Information, 1000);
             }
         }

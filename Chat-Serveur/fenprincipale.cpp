@@ -343,8 +343,6 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
 
     //Traitement du message
     message = message.simplified();
-    message.replace("<", "&lt;");
-    message.replace(">", "&gt;");
 
     //On vérifie si le message n'est pas vide.
     if (message.isEmpty())
