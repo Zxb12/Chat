@@ -65,7 +65,6 @@ private slots:
     void on_connecter_clicked();
     void on_envoyer_clicked();
     void on_message_returnPressed();
-    void premierPlan();
 
 };
 

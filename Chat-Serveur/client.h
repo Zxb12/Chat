@@ -8,13 +8,16 @@
 #include <QTimer>
 #include <QCryptographicHash>
 
+#include "fenprincipale.h"
 #include "../shared/paquet.h"
+
+class FenPrincipale;
 
 class Client : public QObject
 {
     Q_OBJECT
 public:
-    Client(QTcpSocket *socket);
+    Client(QTcpSocket *socket, FenPrincipale *parent = 0);
     ~Client();
 
     QTcpSocket* getSocket() { return m_socket; }
@@ -47,6 +50,7 @@ public slots:
     void sendPing();
 
 private:
+    FenPrincipale *m_parent;
     QTcpSocket *m_socket;
     quint16 m_taillePaquet;
 

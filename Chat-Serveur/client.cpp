@@ -2,8 +2,8 @@
 
 #define CONSOLE(a) emit console(a)
 
-Client::Client(QTcpSocket *socket) : m_socket(socket), m_taillePaquet(0), m_pseudo(""), m_account(""), m_authLevel(0), m_idCompte(0),
-                                     m_pingsPending(0), m_ping(0)
+Client::Client(QTcpSocket *socket, FenPrincipale *parent) : m_parent(parent), m_socket(socket), m_taillePaquet(0), m_pseudo(""), m_account(""), m_authLevel(0),
+                                    m_idCompte(0), m_pingsPending(0), m_ping(0)
 
 {
     connect(m_socket, SIGNAL(readyRead()), this, SLOT(donneesRecues()));
@@ -74,6 +74,16 @@ void Client::sendPing()
     if (m_pingsPending > 3)
     {
         CONSOLE(m_pseudo + " a été kické pour ping timeout.");
+
+        //On avertit les connectés.
+        Paquet out;
+        out << SMSG_USER_KICKED;
+        out << QString("le serveur");    //Par qui on a été kické
+        out << m_pseudo;                 //Qui a été kické
+        out << QString("ping timeout");  //Raison
+        m_parent->envoyerATous(out);
+
+        //Déconnexion.
         m_socket->abort();
     }
 }

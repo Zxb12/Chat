@@ -6,6 +6,8 @@
 #include "client.h"
 
 class FenPrincipale;
+class Paquet;
+class Client;
 
 struct OpCodeHandler
 {

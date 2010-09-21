@@ -88,7 +88,7 @@ void FenPrincipale::console(QString txt)
 void FenPrincipale::nouvelleConnexion()
 {
     //Nouvelle connexion : on crée l'objet Client, on fait les connexions
-    Client *nouveauClient = new Client(m_serveur->nextPendingConnection());
+    Client *nouveauClient = new Client(m_serveur->nextPendingConnection(), this);
     connect(nouveauClient, SIGNAL(deconnecte()), this, SLOT(decoClient()));
     connect(nouveauClient, SIGNAL(console(QString)), this, SLOT(console(QString)));
     connect(nouveauClient, SIGNAL(paquetRecu(Paquet*)), this, SLOT(paquetRecu(Paquet*)));
