@@ -9,17 +9,18 @@ CREATE TABLE `account` (
   `level` smallint(6) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for ban_account
 -- ----------------------------
 CREATE TABLE `ban_account` (
   `account_id` int(11) unsigned NOT NULL,
-  `bandate` datetime NOT NULL,
-  `unbandate` datetime NOT NULL,
+  `bandate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `unbandate` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `bannedby` varchar(50) NOT NULL DEFAULT 'SERVER',
   `reason` varchar(255) NOT NULL DEFAULT 'No reason set.',
+  PRIMARY KEY (`account_id`),
   KEY `account_id` (`account_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -28,10 +29,11 @@ CREATE TABLE `ban_account` (
 -- ----------------------------
 CREATE TABLE `ban_ip` (
   `ip` varchar(32) NOT NULL DEFAULT '0.0.0.0',
-  `bandate` datetime NOT NULL,
-  `unbandate` datetime NOT NULL,
+  `bandate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `unbandate` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `bannedby` varchar(50) NOT NULL DEFAULT 'SERVER',
-  `reason` varchar(255) NOT NULL DEFAULT 'No reason set.'
+  `reason` varchar(255) NOT NULL DEFAULT 'No reason set.',
+  PRIMARY KEY (`ip`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- ----------------------------
@@ -55,4 +57,4 @@ CREATE TABLE `chat_history` (
   `message` text NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
