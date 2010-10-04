@@ -200,7 +200,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     QString pseudo, login;
     QByteArray pwhash;
     quint8 authLevel;
-    quint32 id;
+    quint32 id = 0;
 
     *in >> login >> pwhash >> pseudo;
 
