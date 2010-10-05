@@ -345,7 +345,10 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
 
             //Si l'ancien pseudo correspond à notre pseudo, on fait la mise à jour.
             if (m_pseudo == ancienPseudo)
+            {
                 m_pseudo = ancienPseudo;
+                ui->pseudo->setText(nouveauPseudo);
+            }
 
             CHAT("<em>" + ancienPseudo + " s'appelle maintenant " + nouveauPseudo + ".</em>");
             break;
