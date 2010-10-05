@@ -2,7 +2,7 @@
 
 #define CONSOLE(a) emit console(a)
 
-Client::Client(QTcpSocket *socket, FenPrincipale *parent) : m_parent(parent), m_socket(socket), m_taillePaquet(0), m_pseudo(""), m_account(""), m_authLevel(0),
+Client::Client(QTcpSocket *socket, FenPrincipale *parent) : m_parent(parent), m_socket(socket), m_taillePaquet(0), m_pseudo(""), m_account(""), m_loginLevel(0),
                                     m_idCompte(0), m_pingsPending(0), m_ping(0)
 
 {

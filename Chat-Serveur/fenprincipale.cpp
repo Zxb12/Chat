@@ -201,7 +201,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
 {
     QString pseudo, login;
     QByteArray pwhash;
-    quint8 authLevel;
+    quint8 loginLevel;
     quint32 id = 0;
 
     *in >> login >> pwhash >> pseudo;
@@ -282,7 +282,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
 
         //On a trouvé un enregistrement correspondant au nom et au mot de passe !
         //On récupère son niveau et son id
-        authLevel = query.value(3).toInt();
+        loginLevel = query.value(3).toInt();
         id = query.value(0).toInt();
 
         //On vérifie s'il n'est pas banni.
@@ -337,7 +337,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     else
     {
         //Pas de compte spécifié
-        authLevel = 0;
+        loginLevel = 0;
     }
     //Vérifie la taille du pseudo
     if (pseudo.size() < m_nickMinLength)
@@ -368,7 +368,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     CONSOLE("Client authentifié : " + pseudo);
     client->setPseudo(pseudo);
     client->setAccount(login);
-    client->setAuthLevel(authLevel);
+    client->setLoginLevel(loginLevel);
     client->setIdCompte(id);
 
     Paquet out;
@@ -378,7 +378,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
 
     out.clear();
     out << SMSG_USER_JOINED;
-    out << pseudo << client->getHashIP() << authLevel;
+    out << pseudo << client->getHashIP() << loginLevel;
     envoyerATous(out);
 
     return;
@@ -501,7 +501,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
     *in >> login >> pwhash;
 
     //Vérification des droits.
-    if (client->getAuthLevel() < m_registerLevel)
+    if (client->getLoginLevel() < m_registerLevel)
     {
         Paquet out;
         out << SMSG_NOT_AUTHORIZED;
@@ -570,7 +570,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
 void FenPrincipale::handleKick(Paquet *in, Client *client)
 {
     //On vérifie le niveau d'authentification
-    if (client->getAuthLevel() < m_kickLevel)
+    if (client->getLoginLevel() < m_kickLevel)
     {
         Paquet out;
         out << SMSG_NOT_AUTHORIZED;
@@ -607,7 +607,7 @@ void FenPrincipale::handleKick(Paquet *in, Client *client)
     }
 
     //On vérifie que la cible n'est pas de plus haut niveau.
-    if (clientAKicker->getAuthLevel() >= client->getAuthLevel())
+    if (clientAKicker->getLoginLevel() >= client->getLoginLevel())
     {
         Paquet out;
         out << SMSG_NO_INTERACT_HIGHER_LEVEL;
@@ -630,7 +630,7 @@ void FenPrincipale::handleKick(Paquet *in, Client *client)
 void FenPrincipale::handleBan(Paquet *in, Client *client)
 {
     //On vérifie le niveau d'authentification
-    if (client->getAuthLevel() < m_kickLevel)
+    if (client->getLoginLevel() < m_kickLevel)
     {
         Paquet out;
         out << SMSG_NOT_AUTHORIZED;
@@ -669,7 +669,7 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
     }
 
     //On vérifie que la cible n'est pas plus haut niveau
-    if (clientABannir->getAuthLevel() >= client->getAuthLevel())
+    if (clientABannir->getLoginLevel() >= client->getLoginLevel())
     {
         Paquet out;
         out << SMSG_NO_INTERACT_HIGHER_LEVEL;
@@ -783,14 +783,14 @@ void FenPrincipale::handleLevelMod(Paquet *in, Client *client)
     quint8 acctLevel = query.value(3).toInt();
 
     //Vérifications concernant le compte.
-    if (client->getAuthLevel() <= acctLevel)
+    if (client->getLoginLevel() <= acctLevel)
     {
         Paquet out;
         out << SMSG_NO_INTERACT_HIGHER_LEVEL;
         out >> client->getSocket();
         return;
     }
-    if (acctLevel > client->getAuthLevel())
+    if (acctLevel > client->getLoginLevel())
     {
         Paquet out;
         out << SMSG_LVL_MOD_LEVEL_TOO_HIGH;
@@ -809,7 +809,7 @@ void FenPrincipale::handleLevelMod(Paquet *in, Client *client)
 
     if (clientAModifier)
     {
-        clientAModifier->setAuthLevel(level);
+        clientAModifier->setLoginLevel(level);
 
         out << SMSG_LVL_CHANGED;
         out << client->getPseudo() << level;
@@ -824,7 +824,7 @@ void FenPrincipale::handleLevelMod(Paquet *in, Client *client)
 
 void FenPrincipale::handleWhoIs(Paquet *in, Client *client)
 {
-    if (client->getAuthLevel() < m_whoisLevel)
+    if (client->getLoginLevel() < m_whoisLevel)
     {
         Paquet out;
         out << SMSG_NOT_AUTHORIZED;
@@ -861,7 +861,7 @@ void FenPrincipale::handleWhoIs(Paquet *in, Client *client)
     out << SMSG_WHOIS;
     out << clientCible->getPseudo();
     out << clientCible->getAccount();
-    out << clientCible->getAuthLevel();
+    out << clientCible->getLoginLevel();
     out << clientCible->getPing();
     out << clientCible->getHashIP();
     out >> client->getSocket();

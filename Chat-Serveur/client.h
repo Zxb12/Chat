@@ -26,8 +26,8 @@ public:
     void setPseudo(QString pseudo) { m_pseudo = pseudo; }
     QString getAccount() { return m_account; }
     void setAccount(QString account) { m_account = account; }
-    quint8 getAuthLevel() { return m_authLevel; }
-    void setAuthLevel(quint8 authLevel) { m_authLevel = authLevel; }
+    quint8 getLoginLevel() { return m_loginLevel; }
+    void setLoginLevel(quint8 loginLevel) { m_loginLevel = loginLevel; }
 
     quint32 getIdCompte() { return m_idCompte; }
     void setIdCompte(quint32 id) { m_idCompte = id; }
@@ -56,7 +56,7 @@ private:
 
     QString m_pseudo;
     QString m_account;
-    quint8 m_authLevel;
+    quint8 m_loginLevel;
     quint32 m_idCompte;
     QByteArray m_hashIP;
 
