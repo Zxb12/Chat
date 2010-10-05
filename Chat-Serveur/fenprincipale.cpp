@@ -39,6 +39,8 @@ bool FenPrincipale::chargerFichier()
         m_SQLDatabase =             QString(confFile.readLine()).remove("SQL_DATABASE=").remove("\r\n");
         m_SQLLogin =                QString(confFile.readLine()).remove("SQL_LOGIN=").remove("\r\n");
         m_SQLPassword =             QString(confFile.readLine()).remove("SQL_PASSWORD=").remove("\r\n");
+        m_pingInterval =            QString(confFile.readLine()).remove("PING_INTERVAL=").remove("\r\n").toInt();
+        m_maxPingsPending =         QString(confFile.readLine()).remove("MAX_PINGS_PENDING=").remove("\r\n").toInt();
         m_nickMinLength =           QString(confFile.readLine()).remove("NICK_MIN_LENGTH=").remove("\r\n").toInt();
         m_accountNameMinLength =    QString(confFile.readLine()).remove("ACCOUT_NAME_MIN_LENGTH=").remove("\r\n").toInt();
         m_levelMax =                QString(confFile.readLine()).remove("LVL_MAX=").remove("\r\n").toInt();

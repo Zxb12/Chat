@@ -54,6 +54,12 @@ public slots:
 
     void paquetRecu(Paquet*);
 
+public:
+    //Accesseurs
+    quint32 getPingInterval() { return m_pingInterval; }
+    quint16 getMaxPingsPending() { return m_maxPingsPending; }
+
+
 private:
     Ui::FenPrincipale *ui;
 
@@ -63,10 +69,10 @@ private:
     //Configuration
     QString m_SQLAdresse, m_SQLDatabase, m_SQLLogin, m_SQLPassword;
     quint16 m_serverPort;
-    quint16 m_nickMinLength, m_accountNameMinLength, m_levelMax,
+    quint32 m_pingInterval;
+    quint16 m_maxPingsPending, m_nickMinLength, m_accountNameMinLength, m_levelMax,
             m_registerLevel, m_kickLevel, m_banLevel, m_voiceLevel, m_promoteLevel,
             m_whoisLevel;
-
 };
 
 #endif // FENPRINCIPALE_H

@@ -12,7 +12,8 @@ Client::Client(QTcpSocket *socket, FenPrincipale *parent) : m_parent(parent), m_
     //Création du timer pour le lancement des pings.
     m_pingTimer = new QTimer(this);
     connect(m_pingTimer, SIGNAL(timeout()), this, SLOT(sendPing()));
-    m_pingTimer->start(10000);
+    m_pingTimer->start(m_parent->getPingInterval());
+    sendPing(); //On lance un ping
 
     //Génération du hash de l'IP.
     //4 caractères hexa.
@@ -71,7 +72,7 @@ void Client::sendPing()
 
     m_pingsPending++;
 
-    if (m_pingsPending > 3)
+    if (m_pingsPending > m_parent->getMaxPingsPending())
     {
         CONSOLE(m_pseudo + " a été kické pour ping timeout.");
 
