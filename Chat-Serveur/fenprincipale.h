@@ -1,6 +1,8 @@
 #ifndef FENPRINCIPALE_H
 #define FENPRINCIPALE_H
 
+#define VERSION         QString("Chat-0.0.1a")
+
 #include <QWidget>
 #include <QTcpServer>
 #include <QTcpSocket>

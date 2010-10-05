@@ -11,6 +11,7 @@ OpCodeHandler OpCodeTable[NB_OPCODES] =
     {"SMSG_AUTH_IP_BANNED",                 &FenPrincipale::handleServerSide},
     {"SMSG_AUTH_ACCT_BANNED",               &FenPrincipale::handleServerSide},
     {"SMSG_AUTH_ERROR",                     &FenPrincipale::handleServerSide},
+    {"SMSG_AUTH_INCORRECT_VERSION",         &FenPrincipale::handleServerSide},
     {"CMSG_SET_NICK",                       &FenPrincipale::handleSetNick},
     {"SMSG_NICK_ALREADY_IN_USE",            &FenPrincipale::handleServerSide},
     {"SMSG_NICK_TOO_SHORT",                 &FenPrincipale::handleServerSide},

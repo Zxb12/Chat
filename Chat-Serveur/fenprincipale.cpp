@@ -185,10 +185,26 @@ void FenPrincipale::envoyerATous(Paquet &paquet)
 
 void FenPrincipale::handleHello(Paquet* in, Client* client)
 {
+    QString clientVersion;
+    *in >> clientVersion;
+
+    //On vérifie la version.
+    if (clientVersion != VERSION)
+    {
+        CONSOLE("Le client " + client->getSocket()->peerAddress().toString() +
+                " a essayé de se connecter avec un client à la mauvaise version (" + clientVersion + ").");
+        Paquet out;
+        out << SMSG_AUTH_INCORRECT_VERSION;
+        out << VERSION;
+        out.send(client->getSocket());
+        kickClient(client);
+        return;
+    }
+
+    //On peut se connecter.
     Paquet out;
     out << SMSG_HELLO;
-
-    out >> client->getSocket();
+    out.send(client->getSocket());
 }
 
 void FenPrincipale::handleServerSide(Paquet* in, Client* client)

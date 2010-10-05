@@ -120,15 +120,14 @@ void FenPrincipale::connecte()
     CONSOLE("Connexion réussie !");
     ui->connecter->setEnabled(true);
 
-    QByteArray pwhash = QCryptographicHash::hash(ui->password->text().toUtf8(), QCryptographicHash::Sha1);
-
-    //On demande au serveur de nous attribuer un pseudo.
-    Paquet out;
-    out << CMSG_AUTH_LOGIN << ui->login->text() << pwhash << ui->pseudo->text();
-    out >> m_socket;
-
     //On sélectionne la zone de message.
     ui->message->setFocus();
+
+    //On envoie le Hello
+    Paquet out;
+    out << CMSG_HELLO;
+    out << VERSION;
+    out.send(m_socket);
 }
 
 // Ce slot est appelé lorsqu'on est déconnecté du serveur
@@ -198,7 +197,12 @@ void FenPrincipale::handleClientSide(Paquet *in, quint16 opCode)
 
 void FenPrincipale::handleHello(Paquet *in, quint16 opCode)
 {
+    QByteArray pwhash = QCryptographicHash::hash(ui->password->text().toUtf8(), QCryptographicHash::Sha1);
 
+    //Authentification
+    Paquet out;
+    out << CMSG_AUTH_LOGIN << ui->login->text() << pwhash << ui->pseudo->text();
+    out >> m_socket;
 }
 
 void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
@@ -245,6 +249,13 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
                 CHAT("ERREUR: Votre IP a été bannie définitivement.");
             }
             CHAT("Raison: " + raison);
+            break;
+        }
+    case SMSG_AUTH_INCORRECT_VERSION:
+        {
+            QByteArray version;
+            *in >> version;
+            CHAT("Votre version (" + QString(VERSION) + ") est incompatible avec celle du serveur (" + version + ").");
             break;
         }
     case SMSG_AUTH_ERROR:

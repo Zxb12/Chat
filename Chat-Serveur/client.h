@@ -9,9 +9,17 @@
 #include <QCryptographicHash>
 
 #include "fenprincipale.h"
+#include "opcode.h"
 #include "../shared/paquet.h"
 
 class FenPrincipale;
+
+enum ConnectionStatus
+{
+    NOT_AUTHED,
+    NOT_LOGGEDIN,
+    LOGGEDIN,
+};
 
 class Client : public QObject
 {
@@ -32,6 +40,8 @@ public:
     quint32 getIdCompte() { return m_idCompte; }
     void setIdCompte(quint32 id) { m_idCompte = id; }
     QByteArray getHashIP() { return m_hashIP; }
+    ConnectionStatus getConnectionStatus() { return m_connectionStatus; }
+    void setConnectionStatus(ConnectionStatus cs) { m_connectionStatus = cs; }
 
     quint8 getPingsPending() { return m_pingsPending; }
     void setPingsPending(quint8 pings) { m_pingsPending = pings; }
@@ -59,6 +69,7 @@ private:
     quint8 m_loginLevel;
     quint32 m_idCompte;
     QByteArray m_hashIP;
+    ConnectionStatus m_connectionStatus;
 
     quint8 m_pingsPending;
     QTimer *m_pingTimer;
