@@ -425,6 +425,10 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
     {
         if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == 0)
         {
+            //Si on modifie notre pseudo, on peut changer nos majuscules/minuscules.
+            if (i_client == client && i_client->getPseudo() != pseudo)
+                continue;
+
             CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
             Paquet out;
             out << SMSG_NICK_ALREADY_IN_USE;
