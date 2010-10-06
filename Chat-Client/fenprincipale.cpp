@@ -346,7 +346,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             //Si l'ancien pseudo correspond à notre pseudo, on fait la mise à jour.
             if (m_pseudo == ancienPseudo)
             {
-                m_pseudo = ancienPseudo;
+                m_pseudo = nouveauPseudo;
                 ui->pseudo->setText(nouveauPseudo);
             }
 
