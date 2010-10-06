@@ -886,3 +886,23 @@ void FenPrincipale::handleWhoIs(Paquet *in, Client *client)
     out << clientCible->getHashIP();
     out >> client->getSocket();
 }
+
+void FenPrincipale::handleUpdateClientsList(Paquet *in, Client *client)
+{
+    //OpCode - size - pseudos
+    QStringList pseudos;
+    quint32 size = 0;
+
+    foreach (Client* i_client, m_clients)
+    {
+        size++;
+        pseudos << i_client->getPseudo();
+    }
+
+    Paquet out;
+    out << SMSG_CLIENTS_LIST;
+    out << size;
+    for (quint32 i = 0; i < size; i++)
+        out << pseudos[i];
+    out.send(client->getSocket());
+}

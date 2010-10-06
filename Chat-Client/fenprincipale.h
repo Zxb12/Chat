@@ -47,6 +47,7 @@ public:
     void handleLevelMod(Paquet*, quint16);
     void handleError(Paquet*, quint16);
     void handleWhoIs(Paquet*, quint16);
+    void handleClientsList(Paquet*, quint16);
     void handleChatCommands(QString&);
 
 private:

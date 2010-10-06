@@ -45,6 +45,7 @@ public:
     void handleVoice(Paquet*, Client*);
     void handleLevelMod(Paquet*, Client*);
     void handleWhoIs(Paquet*, Client*);
+    void handleUpdateClientsList(Paquet*, Client*);
 
 
 public slots:

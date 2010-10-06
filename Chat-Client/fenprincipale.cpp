@@ -25,7 +25,7 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
     ui->chat->setEnabled(false);
     ui->message->setEnabled(false);
     ui->envoyer->setEnabled(false);
-
+    ui->listeConnectes->setEnabled(false);
     ui->connecter->setFocus();
 }
 
@@ -69,9 +69,9 @@ void FenPrincipale::on_envoyer_clicked()
     ui->message->setFocus(); // Et on remet le curseur à l'intérieur
 }
 
-// Appuyer sur la touche Entrée a le même effet que cliquer sur le bouton "Envoyer"
 void FenPrincipale::on_message_returnPressed()
 {
+    // Appuyer sur la touche Entrée a le même effet que cliquer sur le bouton "Envoyer"
     on_envoyer_clicked();
 }
 
@@ -138,6 +138,8 @@ void FenPrincipale::deconnecte()
     ui->chat->setEnabled(false);
     ui->message->setEnabled(false);
     ui->envoyer->setEnabled(false);
+    ui->listeConnectes->setEnabled(false);
+    ui->listeConnectes->clear();
 }
 
 // Ce slot est appelé lorsqu'il y a une erreur
@@ -262,15 +264,22 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
         CHAT("ERREUR: Erreur d'authentifiation.");
         break;
     case SMSG_AUTH_OK:
-        CHAT("Authentification réussie.");
+        {
+            CHAT("Authentification réussie.");
 
-        ui->chat->setEnabled(true);
-        ui->message->setEnabled(true);
-        ui->envoyer->setEnabled(true);
+            ui->chat->setEnabled(true);
+            ui->message->setEnabled(true);
+            ui->envoyer->setEnabled(true);
+            ui->listeConnectes->setEnabled(true);
 
-        *in >> m_pseudo;
-        
-        break;
+            *in >> m_pseudo;
+
+            Paquet out;
+            out << CMSG_UPDATE_CLIENTS_LIST;
+            out.send(m_socket);
+
+            break;
+        }
     default:
         CONSOLE("ERREUR: Paquet non géré dans handleAuth");
         break;
@@ -327,6 +336,9 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             quint8 level;
             *in >> pseudo >> hash >> level;
 
+            //Mise à jour de la liste des connectés
+            ui->listeConnectes->addItem(pseudo);
+
             CHAT("<em>" + pseudo + " (" + hash + ", " + QString::number(level) + ") s'est joint au Chat.</em>");
             break;
         }
@@ -334,6 +346,11 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
         {
             QString pseudo;
             *in >> pseudo;
+
+            //Recherche le pseudo, prend sa ligne et le supprime.
+            delete ui->listeConnectes->takeItem(
+                    ui->listeConnectes->row(
+                            ui->listeConnectes->findItems(pseudo, Qt::MatchExactly).first()));
 
             CHAT("<em>" + pseudo + " a quitté le Chat.</em>");
             break;
@@ -349,6 +366,9 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
                 m_pseudo = nouveauPseudo;
                 ui->pseudo->setText(nouveauPseudo);
             }
+
+            //Mise à jour de la liste de connectés
+            ui->listeConnectes->findItems(ancienPseudo, Qt::MatchExactly).first()->setText(nouveauPseudo);
 
             CHAT("<em>" + ancienPseudo + " s'appelle maintenant " + nouveauPseudo + ".</em>");
             break;
@@ -511,6 +531,23 @@ void FenPrincipale::handleWhoIs(Paquet *in, quint16 opCode)
     CHAT("Niveau de compte: " + QString::number(niveau));
     CHAT("Ping: " + QString::number(ping) + "ms");
     CHAT("Hash de l'IP: " + hashIP);
+}
+
+void FenPrincipale::handleClientsList(Paquet *in, quint16 opCode)
+{
+    ui->listeConnectes->clear();
+
+    quint32 size;
+    QStringList pseudos;
+    QString tempPseudo;
+    *in >> size;
+    for (quint32 i = 0; i < size; i++)
+    {
+        *in >> tempPseudo;
+        pseudos << tempPseudo;
+    }
+
+    ui->listeConnectes->addItems(pseudos);
 }
 
 void FenPrincipale::handleChatCommands(QString &msg)
