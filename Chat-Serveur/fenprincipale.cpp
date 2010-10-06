@@ -1,6 +1,12 @@
 #include "fenprincipale.h"
 #include "ui_fenprincipale.h"
 
+#if defined ( WIN32 ) || defined ( WIN64 )
+#define ENDL "\r\n"
+#else
+#define ENDL "\n"
+#endif
+
 #define CONSOLE(a)  ui->console->append(QTime::currentTime().toString() + " " + a)
 
 FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenPrincipale)
@@ -34,22 +40,22 @@ bool FenPrincipale::chargerFichier()
     {
 
         //Chargement depuis le fichier.
-        m_serverPort =              QString(confFile.readLine()).remove("SERVER_PORT=").remove("\r\n").toInt();
-        m_SQLAdresse =              QString(confFile.readLine()).remove("SQL_ADDRESS=").remove("\r\n");
-        m_SQLDatabase =             QString(confFile.readLine()).remove("SQL_DATABASE=").remove("\r\n");
-        m_SQLLogin =                QString(confFile.readLine()).remove("SQL_LOGIN=").remove("\r\n");
-        m_SQLPassword =             QString(confFile.readLine()).remove("SQL_PASSWORD=").remove("\r\n");
-        m_pingInterval =            QString(confFile.readLine()).remove("PING_INTERVAL=").remove("\r\n").toInt();
-        m_maxPingsPending =         QString(confFile.readLine()).remove("MAX_PINGS_PENDING=").remove("\r\n").toInt();
-        m_nickMinLength =           QString(confFile.readLine()).remove("NICK_MIN_LENGTH=").remove("\r\n").toInt();
-        m_accountNameMinLength =    QString(confFile.readLine()).remove("ACCOUT_NAME_MIN_LENGTH=").remove("\r\n").toInt();
-        m_levelMax =                QString(confFile.readLine()).remove("LVL_MAX=").remove("\r\n").toInt();
-        m_registerLevel =           QString(confFile.readLine()).remove("REGISTER_LVL=").remove("\r\n").toInt();
-        m_kickLevel =               QString(confFile.readLine()).remove("KICK_LVL=").remove("\r\n").toInt();
-        m_banLevel =                QString(confFile.readLine()).remove("BAN_LVL=").remove("\r\n").toInt();
-        m_voiceLevel =              QString(confFile.readLine()).remove("VOICE_LVL=").remove("\r\n").toInt();
-        m_promoteLevel =            QString(confFile.readLine()).remove("PROMOTE_LVL=").remove("\r\n").toInt();
-        m_whoisLevel =              QString(confFile.readLine()).remove("WHOIS_LVL=").remove("\r\n").toInt();
+        m_serverPort =              QString(confFile.readLine()).remove("SERVER_PORT=").remove(ENDL).toInt();
+        m_SQLAdresse =              QString(confFile.readLine()).remove("SQL_ADDRESS=").remove(ENDL);
+        m_SQLDatabase =             QString(confFile.readLine()).remove("SQL_DATABASE=").remove(ENDL);
+        m_SQLLogin =                QString(confFile.readLine()).remove("SQL_LOGIN=").remove(ENDL);
+        m_SQLPassword =             QString(confFile.readLine()).remove("SQL_PASSWORD=").remove(ENDL);
+        m_pingInterval =            QString(confFile.readLine()).remove("PING_INTERVAL=").remove(ENDL).toInt();
+        m_maxPingsPending =         QString(confFile.readLine()).remove("MAX_PINGS_PENDING=").remove(ENDL).toInt();
+        m_nickMinLength =           QString(confFile.readLine()).remove("NICK_MIN_LENGTH=").remove(ENDL).toInt();
+        m_accountNameMinLength =    QString(confFile.readLine()).remove("ACCOUT_NAME_MIN_LENGTH=").remove(ENDL).toInt();
+        m_levelMax =                QString(confFile.readLine()).remove("LVL_MAX=").remove(ENDL).toInt();
+        m_registerLevel =           QString(confFile.readLine()).remove("REGISTER_LVL=").remove(ENDL).toInt();
+        m_kickLevel =               QString(confFile.readLine()).remove("KICK_LVL=").remove(ENDL).toInt();
+        m_banLevel =                QString(confFile.readLine()).remove("BAN_LVL=").remove(ENDL).toInt();
+        m_voiceLevel =              QString(confFile.readLine()).remove("VOICE_LVL=").remove(ENDL).toInt();
+        m_promoteLevel =            QString(confFile.readLine()).remove("PROMOTE_LVL=").remove(ENDL).toInt();
+        m_whoisLevel =              QString(confFile.readLine()).remove("WHOIS_LVL=").remove(ENDL).toInt();
 
         return true;
     }
