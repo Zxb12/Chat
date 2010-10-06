@@ -457,7 +457,7 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
     QString pseudo = client->getPseudo();
 
     //Traitement du message
-    message = message.simplified();
+    message = message.trimmed();
 
     //On vérifie si le message n'est pas vide.
     if (message.isEmpty())
