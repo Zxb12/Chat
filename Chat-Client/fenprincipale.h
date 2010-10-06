@@ -2,7 +2,7 @@
 #define FENPRINCIPALE_H
 
 #define TAILLE_MDP_MIN  5
-#define VERSION         QString("Chat-0.0.1a")
+#define VERSION         QString("Chat-0.0.2a")
 
 #include <QWidget>
 #include <QTcpSocket>
