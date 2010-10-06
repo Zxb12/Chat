@@ -51,4 +51,5 @@ OpCodeHandler OpCodeTable[NB_OPCODES] =
     {"SMSG_WHOIS",                          &FenPrincipale::handleServerSide},
     {"CMSG_UPDATE_CLIENTS_LIST",            &FenPrincipale::handleUpdateClientsList},
     {"SMSG_CLIENTS_LIST",                   &FenPrincipale::handleServerSide},
+    {"CMSG_LOGOUT",                         &FenPrincipale::handleLogout},
 };

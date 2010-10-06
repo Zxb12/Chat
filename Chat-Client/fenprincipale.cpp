@@ -4,7 +4,8 @@
 #define CONSOLE(a) ui->console->append(QTime::currentTime().toString() + " " + a)
 #define CHAT(a)    ui->chat->appendHtml(a)
 
-FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenPrincipale), m_taillePaquet(0), m_acctName("")
+FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenPrincipale), m_taillePaquet(0), m_acctName(""),
+m_quitOnDisconnect(false)
 {
     ui->setupUi(this);
 
@@ -140,6 +141,9 @@ void FenPrincipale::deconnecte()
     ui->envoyer->setEnabled(false);
     ui->listeConnectes->setEnabled(false);
     ui->listeConnectes->clear();
+
+    if (m_quitOnDisconnect)
+        qApp->quit();
 }
 
 // Ce slot est appelé lorsqu'il y a une erreur
@@ -344,15 +348,17 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
         }
     case SMSG_USER_LEFT:
         {
-            QString pseudo;
-            *in >> pseudo;
+            QString pseudo, raison;
+            QByteArray hash;
+            quint8 level;
+            *in >> pseudo >> raison >> hash >> level;
 
             //Recherche le pseudo, prend sa ligne et le supprime.
             delete ui->listeConnectes->takeItem(
                     ui->listeConnectes->row(
                             ui->listeConnectes->findItems(pseudo, Qt::MatchExactly).first()));
 
-            CHAT("<em>" + pseudo + " a quitté le Chat.</em>");
+            CHAT("<em>" + pseudo + " (" + hash + ", " + QString::number(level) + ") a quitté le Chat : " + raison + "</em>");
             break;
         }
     case SMSG_USER_RENAMED:
@@ -596,10 +602,6 @@ void FenPrincipale::handleChatCommands(QString &msg)
         }
         out >> m_socket;
     }
-    else if (args[0] == "/quit")
-    {
-        this->close();
-    }
     else if (args[0] == "/register")
     {
         //Si on n'a pas assez d'arguments, on abandonne
@@ -733,6 +735,32 @@ void FenPrincipale::handleChatCommands(QString &msg)
         Paquet out;
         out << CMSG_WHOIS << args[1];
         out >> m_socket;
+    }
+    else if (args[0] == "/quit")
+    {
+        QString quitMessage;
+        for (int i = 1; i < args.size(); i++)
+            quitMessage += (args[i] + ' ');
+
+        //On se prépare à quitter.
+        m_quitOnDisconnect = true;
+
+        Paquet out;
+        out << CMSG_SET_LOGOUT_MSG << quitMessage;
+        out.send(m_socket);
+    }
+    else if (args[0] == "/logout" || args[0] == "/deco")
+    {
+        QString logoutMessage;
+        for (int i = 1; i < args.size(); i++)
+            logoutMessage += (args[i] + ' ');
+
+        //On se prépare à quitter.
+        m_quitOnDisconnect = false;
+
+        Paquet out;
+        out << CMSG_SET_LOGOUT_MSG << logoutMessage;
+        out.send(m_socket);
     }
     else
     {

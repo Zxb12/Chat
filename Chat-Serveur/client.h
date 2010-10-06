@@ -42,6 +42,8 @@ public:
     QByteArray getHashIP() { return m_hashIP; }
     ConnectionStatus getConnectionStatus() { return m_connectionStatus; }
     void setConnectionStatus(ConnectionStatus cs) { m_connectionStatus = cs; }
+    QString getLogoutMessage() { return m_logoutMessage; }
+    void setLogoutMessage(QString msg) { m_logoutMessage = msg; }
 
     quint8 getPingsPending() { return m_pingsPending; }
     void setPingsPending(quint8 pings) { m_pingsPending = pings; }
@@ -70,6 +72,7 @@ private:
     quint32 m_idCompte;
     QByteArray m_hashIP;
     ConnectionStatus m_connectionStatus;
+    QString m_logoutMessage;
 
     quint8 m_pingsPending;
     QTimer *m_pingTimer;

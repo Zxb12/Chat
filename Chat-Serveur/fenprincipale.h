@@ -46,6 +46,7 @@ public:
     void handleLevelMod(Paquet*, Client*);
     void handleWhoIs(Paquet*, Client*);
     void handleUpdateClientsList(Paquet*, Client*);
+    void handleLogout(Paquet*, Client*);
 
 
 public slots:

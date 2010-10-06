@@ -122,7 +122,7 @@ void FenPrincipale::decoClient()
     {
         Paquet out;
         out << SMSG_USER_LEFT;
-        out << client->getPseudo();
+        out << client->getPseudo() << client->getLogoutMessage() << client->getHashIP(), client->getLoginLevel();
         envoyerATous(out);
     }
 
@@ -911,4 +911,14 @@ void FenPrincipale::handleUpdateClientsList(Paquet *in, Client *client)
     for (quint32 i = 0; i < size; i++)
         out << pseudos[i];
     out.send(client->getSocket());
+}
+
+void FenPrincipale::handleLogout(Paquet *in, Client *client)
+{
+    QString raison;
+    *in >> raison;
+
+    client->setLogoutMessage(raison);
+
+    client->getSocket()->disconnectFromHost();
 }

@@ -62,6 +62,8 @@ private:
     QString m_pseudo;
     QString m_acctName;
 
+    bool m_quitOnDisconnect;
+
 private slots:
     void on_pseudo_returnPressed();
     void on_connecter_clicked();
