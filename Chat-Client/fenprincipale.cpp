@@ -301,26 +301,24 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
     {
     case SMSG_CHAT_MESSAGE:
         {
-            QString pseudo, message, messageRaw;
-            *in >> pseudo >> messageRaw;
-
-            message = messageRaw;
-
-            //Echappement les caractères de balise.
-            message.replace("<", "&lt;");
-            message.replace(">", "&gt;");
-
-            message = "<strong>&lt;" + pseudo + "&gt;</strong> " + message;
-
-            CHAT(message);
+            QString pseudo, message;
+            *in >> pseudo >> message;
 
             //Affichage d'une infobulle si la fenêtre n'a pas le focus.
             if (!QApplication::focusWidget())
             {
                 if (m_sysTray->supportsMessages())
-                    m_sysTray->showMessage("Nouveau message de " + pseudo, messageRaw,
-                                           QSystemTrayIcon::Information, 1000);
+                    m_sysTray->showMessage("Nouveau message de " + pseudo, message,
+                                           QSystemTrayIcon::Information, 10000);
             }
+
+            //Echappement les caractères HTML.
+            Qt::escape(message);
+
+            message = "<strong>&lt;" + pseudo + "&gt;</strong> " + message;
+
+            CHAT(message);
+
         }
         break;
     default:
