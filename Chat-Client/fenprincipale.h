@@ -10,6 +10,8 @@
 #include <QCryptographicHash>
 #include <QSystemTrayIcon>
 #include <QMenu>
+#include <QFile>
+#include <QMessageBox>
 
 #include "../shared/paquet.h"
 #include "opcode.h"
@@ -32,10 +34,14 @@ public slots:
     void deconnecte();
     void erreurSocket(QAbstractSocket::SocketError erreur);
     void premierPlan();
-    void appendChat(QString, QString);
+
+protected:
+    void closeEvent(QCloseEvent *);
 
 public:
     void paquetRecu(Paquet*);
+    void appendChat(QString, QString);
+    void chargeConfig();
 
     void handleClientSide(Paquet*, quint16);
     void handleHello(Paquet*, quint16);

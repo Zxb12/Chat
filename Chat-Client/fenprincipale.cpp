@@ -12,6 +12,7 @@ m_quitOnDisconnect(false), m_html("")
 
     //Préparation de l'UI
     this->setWindowTitle("OokChat - " + VERSION);
+    chargeConfig();
 
     QMenu *menu = new QMenu("Chat", this);
     menu->addAction("Pas d'actions définies !");
@@ -139,6 +140,50 @@ void FenPrincipale::appendChat(QString str1, QString str2 = "")
     //On efface le HTML et on le remet.
     ui->chat->clear();
     ui->chat->append(m_html); //Append fait scroll en bas
+}
+
+void FenPrincipale::closeEvent(QCloseEvent *event)
+{
+    //Ouverture du fichier.
+    QFile file("chat.conf");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        QMessageBox::warning(this, "Erreur de sauvegarde", "Impossible d'ouvrir le fichier de configuration.\n"
+                                                           "Les paramères ne peuvent pas être sauvegardés.");
+        return;
+    }
+
+    //Préparation du stream
+    QDataStream out(&file);
+
+    out << ui->adresse->text() << quint16(ui->port->value()) << ui->pseudo->text() << ui->login->text();
+
+    file.close();
+}
+
+void FenPrincipale::chargeConfig()
+{
+    //Ouverture du fichier.
+    QFile file("chat.conf");
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        QMessageBox::warning(this, "Erreur de chargement", "Impossible d'ouvrir le fichier de configuration.\n"
+                                                           "Les paramères ne peuvent pas être chargés.");
+        return;
+    }
+
+    //Préparation du stream
+    QDataStream in(&file);
+    QString adresse, pseudo, login;
+    quint16 port;
+
+    in >> adresse >> port >> pseudo >> login;
+
+    //Attribution des valeurs
+    ui->adresse->setText(adresse);
+    ui->port->setValue(port);
+    ui->pseudo->setText(pseudo);
+    ui->login->setText(login);
 }
 
 
