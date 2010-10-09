@@ -32,6 +32,7 @@ public slots:
     void deconnecte();
     void erreurSocket(QAbstractSocket::SocketError erreur);
     void premierPlan();
+    void appendChat(QString, QString);
 
 public:
     void paquetRecu(Paquet*);
@@ -63,6 +64,7 @@ private:
     QString m_acctName;
 
     bool m_quitOnDisconnect;
+    QString m_html;
 
 private slots:
     void on_pseudo_returnPressed();

@@ -2,10 +2,11 @@
 #include "ui_fenprincipale.h"
 
 #define CONSOLE(a) ui->console->append(QTime::currentTime().toString() + " " + a)
-#define CHAT(a)    ui->chat->appendHtml(a)
+#define ERREUR     "<strong style=\"color:#ff0000\">Erreur: </strong>"
+#define SUCCES     "<strong style=\"color:#33ff66\">Succès: </strong>"
 
 FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenPrincipale), m_taillePaquet(0), m_acctName(""),
-m_quitOnDisconnect(false)
+m_quitOnDisconnect(false), m_html("")
 {
     ui->setupUi(this);
 
@@ -28,6 +29,8 @@ m_quitOnDisconnect(false)
     ui->envoyer->setEnabled(false);
     ui->listeConnectes->setEnabled(false);
     ui->connecter->setFocus();
+
+    ui->chat->setHtml(m_html);
 }
 
 FenPrincipale::~FenPrincipale()
@@ -115,6 +118,27 @@ void FenPrincipale::premierPlan()
     ui->message->setFocus();
 }
 
+void FenPrincipale::appendChat(QString str1, QString str2 = "")
+{
+    /* str1: header
+       str2: texte
+       si str2 est vide, str1 est le texte. */
+
+    if (str2.isEmpty())
+    {
+        str2 = str1;
+        str1.clear();
+    }
+
+    //Préparation du HTML
+    m_html += "<tr><td align=\"right\">" + str1 + "</td><td>" + str2 + "</td></tr>";
+
+    //On efface le HTML et on le remet.
+    ui->chat->clear();
+    ui->chat->append(m_html); //Append fait scroll en bas
+}
+
+
 // Ce slot est appelé lorsque la connexion au serveur a réussi
 void FenPrincipale::connecte()
 {
@@ -152,16 +176,16 @@ void FenPrincipale::erreurSocket(QAbstractSocket::SocketError erreur)
     switch(erreur) // On affiche un message différent selon l'erreur qu'on nous indique
     {
     case QAbstractSocket::HostNotFoundError:
-        CHAT("ERREUR : le serveur n'a pas pu être trouvé. Vérifiez l'IP et le port.");
+        appendChat(ERREUR, "Le serveur n'a pas pu être trouvé. Vérifiez l'IP et le port.");
         break;
     case QAbstractSocket::ConnectionRefusedError:
-        CHAT("ERREUR : le serveur a refusé la connexion. Vérifiez si le programme \"serveur\" a bien été lancé. Vérifiez aussi l'IP et le port.");
+        appendChat(ERREUR, "Le serveur a refusé la connexion. Vérifiez si le programme \"serveur\" a bien été lancé. Vérifiez aussi l'IP et le port.");
         break;
     case QAbstractSocket::RemoteHostClosedError:
-        CHAT("ERREUR : le serveur a coupé la connexion.");
+        appendChat(ERREUR, "Le serveur a coupé la connexion.");
         break;
     default:
-        CHAT("ERREUR : " + m_socket->errorString() + "");
+        appendChat(ERREUR, m_socket->errorString());
     }
 
     ui->connecter->setEnabled(true);
@@ -216,10 +240,10 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
     switch (opCode)
     {
     case SMSG_AUTH_INCORRECT_LOGIN:
-        CHAT("ERREUR: Identifiant ou mot de passe de connexion incorrect.");
+        appendChat(ERREUR, "Identifiant ou mot de passe de connexion incorrect.");
         break;
     case SMSG_AUTH_ACCT_ALREADY_IN_USE:
-        CHAT("ERREUR: Ce compte est déjà connecté.");
+        appendChat(ERREUR, "Ce compte est déjà connecté.");
         break;
     case SMSG_AUTH_ACCT_BANNED:
         {
@@ -230,13 +254,13 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
             if (duree)  //Cas d'un ban à durée déterminée.
             {
                 finBan.addSecs(duree);
-                CHAT("ERREUR: Ce compte a été banni. Fin du ban le: " + finBan.toString());
+                appendChat(ERREUR, "Ce compte a été banni. Fin du ban le: " + finBan.toString());
             }
             else        //Cas d'un ban définitif.
             {
-                CHAT("ERREUR: Ce compte a été banni définitivement.");
+                appendChat(ERREUR, "Ce compte a été banni définitivement.");
             }
-            CHAT("Raison: " + raison);
+            appendChat("Raison: " + raison);
             break;
         }
     case SMSG_AUTH_IP_BANNED:
@@ -248,28 +272,28 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
             if (duree)  //Cas d'un ban à durée déterminée.
             {
                 finBan = finBan.addSecs(duree);
-                CHAT("ERREUR: Votre IP a été bannie. Fin du ban le: " + finBan.toString());
+                appendChat(ERREUR, "Votre IP a été bannie. Fin du ban le: " + finBan.toString());
             }
             else        //Cas d'un ban définitif.
             {
-                CHAT("ERREUR: Votre IP a été bannie définitivement.");
+                appendChat(ERREUR, "Votre IP a été bannie définitivement.");
             }
-            CHAT("Raison: " + raison);
+            appendChat("Raison: " + raison);
             break;
         }
     case SMSG_AUTH_INCORRECT_VERSION:
         {
             QByteArray version;
             *in >> version;
-            CHAT("Votre version (" + QString(VERSION) + ") est incompatible avec celle du serveur (" + version + ").");
+            appendChat("Votre version (" + QString(VERSION) + ") est incompatible avec celle du serveur (" + version + ").");
             break;
         }
     case SMSG_AUTH_ERROR:
-        CHAT("ERREUR: Erreur d'authentifiation.");
+        appendChat(ERREUR, "Erreur d'authentifiation.");
         break;
     case SMSG_AUTH_OK:
         {
-            CHAT("Authentification réussie.");
+            appendChat("Authentification réussie.");
 
             ui->chat->setEnabled(true);
             ui->message->setEnabled(true);
@@ -292,7 +316,7 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
 
 void FenPrincipale::handleKick(Paquet *in, quint16 opCode)
 {
-    CHAT("<em>Vous avez été kické par le serveur.</em>");
+    appendChat("<em>Vous avez été kické par le serveur.</em>");
 }
 
 void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
@@ -315,9 +339,9 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
             //Echappement les caractères HTML.
             Qt::escape(message);
 
-            message = "<strong>&lt;" + pseudo + "&gt;</strong> " + message;
+            pseudo = "<strong>&lt;" + pseudo + "&gt;</strong> ";
 
-            CHAT(message);
+            appendChat(pseudo, message);
 
         }
         break;
@@ -341,7 +365,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             //Mise à jour de la liste des connectés
             ui->listeConnectes->addItem(pseudo);
 
-            CHAT("<em>" + pseudo + " (" + hash + ", " + QString::number(level) + ") s'est joint au Chat.</em>");
+            appendChat("-->", "<em>" + pseudo + " (" + hash + ", " + QString::number(level) + ") s'est joint au Chat.</em>");
             break;
         }
     case SMSG_USER_LEFT:
@@ -356,7 +380,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
                     ui->listeConnectes->row(
                             ui->listeConnectes->findItems(pseudo, Qt::MatchExactly).first()));
 
-            CHAT("<em>" + pseudo + " (" + hash + ", " + QString::number(level) + ") a quitté le Chat : " + raison + "</em>");
+            appendChat("<--", "<em>" + pseudo + " (" + hash + ", " + QString::number(level) + ") a quitté le Chat : " + raison + "</em>");
             break;
         }
     case SMSG_USER_RENAMED:
@@ -374,7 +398,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             //Mise à jour de la liste de connectés
             ui->listeConnectes->findItems(ancienPseudo, Qt::MatchExactly).first()->setText(nouveauPseudo);
 
-            CHAT("<em>" + ancienPseudo + " s'appelle maintenant " + nouveauPseudo + ".</em>");
+            appendChat("<em>" + ancienPseudo + " s'appelle maintenant " + nouveauPseudo + ".</em>");
             break;
         }
     case SMSG_USER_KICKED:
@@ -382,7 +406,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             QString pseudo, kickPar, raison;
             *in >> kickPar >> pseudo >> raison;
 
-            CHAT("<em> " + pseudo + " a été kické par " + kickPar + ". Raison: " + raison + "</em>");
+            appendChat("<--", "<em> " + pseudo + " a été kické par " + kickPar + ". Raison: " + raison + "</em>");
             break;
         }
     case SMSG_USER_BANNED:
@@ -390,7 +414,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             QString pseudo, banPar, raison;
             *in >> banPar >> pseudo >> raison;
 
-            CHAT("<em> " + pseudo + " a été banni par " + banPar + ". Raison: " + raison + "</em>");
+            appendChat("<--", "<em> " + pseudo + " a été banni par " + banPar + ". Raison: " + raison + "</em>");
             break;
         }
     case SMSG_USER_VOICED:
@@ -398,7 +422,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             QString pseudo, voicePar;
             *in >> pseudo >> voicePar;
 
-            CHAT("<em> " + pseudo + " a été voicé par " + voicePar + ".</em>");
+            appendChat("<em> " + pseudo + " a été voicé par " + voicePar + ".</em>");
             break;
         }
     default:
@@ -423,7 +447,7 @@ void FenPrincipale::handleRegister(Paquet *in, quint16 opCode)
     {
     case SMSG_REG_OK:
         {
-            CHAT("L'enregistrement a réussi.");
+            appendChat(SUCCES, "L'enregistrement a réussi.");
             QString login;
             *in >> login;
             ui->login->setText(login);
@@ -431,13 +455,13 @@ void FenPrincipale::handleRegister(Paquet *in, quint16 opCode)
             break;
         }
     case SMSG_REG_ACCT_ALREADY_EXISTS:
-        CHAT("ERREUR: Ce compte existe déjà.");
+        appendChat(ERREUR, "Ce compte existe déjà.");
         break;
     case SMSG_REG_INVALID_NICK:
-        CHAT("ERREUR: Nom de compte trop court ou invalide.");
+        appendChat(ERREUR, "Nom de compte trop court ou invalide.");
         break;
     case SMSG_REG_ERROR:
-        CHAT("ERREUR: Le serveur n'a pas pu vous enregistrer.");
+        appendChat(ERREUR, "Le serveur n'a pas pu vous enregistrer.");
         break;
     default:
         CONSOLE("ERREUR: Paquet non géré dans handleRegister");
@@ -450,26 +474,26 @@ void FenPrincipale::handleLevelMod(Paquet *in, quint16 opCode)
     switch (opCode)
     {
     case SMSG_PROMOTE_ERROR:
-        CHAT("ERREUR: La modification du niveau a échoué.");
+        appendChat(ERREUR, "La modification du niveau a échoué.");
         break;
     case SMSG_LVL_MOD_INVALID_LEVEL:
-        CHAT("ERREUR: Ce niveau d'administration n'existe pas.");
+        appendChat(ERREUR, "Ce niveau d'administration n'existe pas.");
         break;
     case SMSG_LVL_MOD_ACCT_DOESNT_EXIST:
-        CHAT("ERREUR: Modification échouée, le compte n'existe pas.");
+        appendChat(ERREUR, "Modification échouée, le compte n'existe pas.");
         break;
     case SMSG_LVL_MOD_LEVEL_TOO_HIGH:
-        CHAT("ERREUR: Modification échouée, nous ne pouvez pas modifier le niveau d'un compte au-delà de votre niveau.");
+        appendChat(ERREUR, "Modification échouée, nous ne pouvez pas modifier le niveau d'un compte au-delà de votre niveau.");
         break;
     case SMSG_LVL_MOD_NOT_YOURSELF:
-        CHAT("ERREUR: Vous ne pouvez pas modifier votre niveau..");
+        appendChat(ERREUR, "Vous ne pouvez pas modifier votre niveau..");
         break;
     case SMSG_LVL_MOD_OK:
         {
             QString compte;
             *in >> compte;
 
-            CHAT("<em>Le niveau du compte " + compte + " a été changé.</em>");
+            appendChat(SUCCES, "<em>Le niveau du compte " + compte + " a été changé.</em>");
             break;
         }
     case SMSG_LVL_CHANGED:
@@ -479,7 +503,7 @@ void FenPrincipale::handleLevelMod(Paquet *in, quint16 opCode)
 
             *in >> pseudo >> level;
 
-            CHAT("<em>" + pseudo + " a modifié votre niveau d'administration au niveau " + QString::number(level) + ".</em>");
+            appendChat("<em>" + pseudo + " a modifié votre niveau d'administration au niveau " + QString::number(level) + ".</em>");
             break;
         }
     default:
@@ -494,25 +518,25 @@ void FenPrincipale::handleError(Paquet *in, quint16 opCode)
     switch (opCode)
     {
     case SMSG_NICK_ALREADY_IN_USE:
-        CHAT("ERREUR: Impossible de se nommer ainsi, le pseudo est déjà utilisé.");
+        appendChat(ERREUR, "Impossible de se nommer ainsi, le pseudo est déjà utilisé.");
         break;
     case SMSG_NICK_TOO_SHORT:
-        CHAT("ERREUR: Pseudo trop court.");
+        appendChat(ERREUR, "Pseudo trop court.");
         break;
     case SMSG_INVALID_MESSAGE:
-        CHAT("ERREUR: Le message envoyé est invalide");
+        appendChat(ERREUR, "Le message envoyé est invalide");
         break;
     case SMSG_INVALID_NICK:
-        CHAT("ERREUR: Impossible d'envoyer un message, votre pseudo est invalide ou indéfini.");
+        appendChat(ERREUR, "Impossible d'envoyer un message, votre pseudo est invalide ou indéfini.");
         break;
     case SMSG_NOT_AUTHORIZED:
-        CHAT("ERREUR: Vous ne disposez pas des privilèges suffisants.");
+        appendChat(ERREUR, "Vous ne disposez pas des privilèges suffisants.");
         break;
     case SMSG_USER_DOESNT_EXIST:
-        CHAT("ERREUR: L'utilisateur spécifié n'existe pas");
+        appendChat(ERREUR, "L'utilisateur spécifié n'existe pas");
         break;
     case SMSG_NO_INTERACT_HIGHER_LEVEL:
-        CHAT("ERREUR: Impossible d'interagir avec un compte de niveau spérieur ou égal au vôtre.");
+        appendChat(ERREUR, "Impossible d'interagir avec un compte de niveau spérieur ou égal au vôtre.");
         break;
     default:
         CONSOLE("ERREUR: Paquet non géré dans handleError");
@@ -530,11 +554,11 @@ void FenPrincipale::handleWhoIs(Paquet *in, quint16 opCode)
 
     *in >> pseudo >> compte >> niveau >> ping >> hashIP;
 
-    CHAT("Whois: " + pseudo);
-    CHAT("Compte: " + compte);
-    CHAT("Niveau de compte: " + QString::number(niveau));
-    CHAT("Ping: " + QString::number(ping) + "ms");
-    CHAT("Hash de l'IP: " + hashIP);
+    appendChat(SUCCES, "Whois: " + pseudo);
+    appendChat("Compte: " + compte);
+    appendChat("Niveau de compte: " + QString::number(niveau));
+    appendChat("Ping: " + QString::number(ping) + "ms");
+    appendChat("Hash de l'IP: " + hashIP);
 }
 
 void FenPrincipale::handleClientsList(Paquet *in, quint16 opCode)
@@ -570,7 +594,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
     {
         if (args.size() < 2)
         {
-            CHAT("Vous devez définir un pseudo !");
+            appendChat(ERREUR, "Vous devez définir un pseudo !");
             msg.clear();
             return;
         }
@@ -605,7 +629,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
         //Si on n'a pas assez d'arguments, on abandonne
         if (args.size() < 3)
         {
-            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            appendChat(ERREUR, "Syntaxe de la commande incorrecte.");
             msg.clear();
             return;
         }
@@ -619,7 +643,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
         //Vérification de la taille du mdp
         if (pw.size() < TAILLE_MDP_MIN)
         {
-            CHAT("ERREUR: Mot de passe trop court");
+            appendChat(ERREUR, "Mot de passe trop court");
             msg.clear();
             return;
         }
@@ -636,7 +660,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
         //Si on n'a pas assez d'arguments, on abandonne
         if (args.size() < 2)
         {
-            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            appendChat(ERREUR, "Syntaxe de la commande incorrecte.");
             msg.clear();
             return;
         }
@@ -653,7 +677,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
         //Si on n'a pas assez d'arguments, on abandonne
         if (args.size() < 2)
         {
-            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            appendChat(ERREUR, "Syntaxe de la commande incorrecte.");
             msg.clear();
             return;
         }
@@ -695,7 +719,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
         //Si on n'a pas assez d'arguments, on abandonne
         if (args.size() < 2)
         {
-            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            appendChat(ERREUR, "Syntaxe de la commande incorrecte.");
             msg.clear();
             return;
         }
@@ -709,7 +733,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
         //Si on n'a pas assez d'arguments, on abandonne
         if (args.size() < 3)
         {
-            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            appendChat(ERREUR, "Syntaxe de la commande incorrecte.");
             msg.clear();
             return;
         }
@@ -725,7 +749,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
         //Si on n'a pas assez d'arguments, on abandonne
         if (args.size() < 2)
         {
-            CHAT("ERREUR: Syntaxe de la commande incorrecte.");
+            appendChat(ERREUR, "Syntaxe de la commande incorrecte.");
             msg.clear();
             return;
         }
@@ -762,7 +786,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
     }
     else
     {
-        CHAT("ERREUR: Commande chat invalide.");
+        appendChat(ERREUR, "Commande chat invalide.");
     }
     msg.clear();
 }
