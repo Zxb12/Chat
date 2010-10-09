@@ -13,6 +13,9 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
 {
     ui->setupUi(this);
 
+    //Préparation de l'UI
+    this->setWindowTitle("OokChatServer - " + VERSION);
+
     if (!chargerFichier())
         CONSOLE("ERREUR: Impossible d'ouvrir le fichier de configuration server.conf");
 

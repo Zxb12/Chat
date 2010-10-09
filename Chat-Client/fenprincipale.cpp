@@ -10,6 +10,9 @@ m_quitOnDisconnect(false), m_html("")
 {
     ui->setupUi(this);
 
+    //Préparation de l'UI
+    this->setWindowTitle("OokChat - " + VERSION);
+
     QMenu *menu = new QMenu("Chat", this);
     menu->addAction("Pas d'actions définies !");
 
