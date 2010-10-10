@@ -14,13 +14,6 @@
 
 class FenPrincipale;
 
-enum ConnectionStatus
-{
-    NOT_AUTHED,
-    NOT_LOGGEDIN,
-    LOGGEDIN,
-};
-
 class Client : public QObject
 {
     Q_OBJECT
@@ -36,14 +29,13 @@ public:
     void setAccount(QString account) { m_account = account; }
     quint8 getLoginLevel() { return m_loginLevel; }
     void setLoginLevel(quint8 loginLevel) { m_loginLevel = loginLevel; }
-
     quint32 getIdCompte() { return m_idCompte; }
     void setIdCompte(quint32 id) { m_idCompte = id; }
     QByteArray getHashIP() { return m_hashIP; }
-    ConnectionStatus getConnectionStatus() { return m_connectionStatus; }
-    void setConnectionStatus(ConnectionStatus cs) { m_connectionStatus = cs; }
     QString getLogoutMessage() { return m_logoutMessage; }
     void setLogoutMessage(QString msg) { m_logoutMessage = msg; }
+    int getSessionState() { return m_sessionState; }
+    void setSessionState(int state) { m_sessionState = state; }
 
     quint8 getPingsPending() { return m_pingsPending; }
     void setPingsPending(quint8 pings) { m_pingsPending = pings; }
@@ -71,8 +63,8 @@ private:
     quint8 m_loginLevel;
     quint32 m_idCompte;
     QByteArray m_hashIP;
-    ConnectionStatus m_connectionStatus;
     QString m_logoutMessage;
+    int m_sessionState;
 
     quint8 m_pingsPending;
     QTimer *m_pingTimer;

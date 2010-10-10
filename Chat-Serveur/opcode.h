@@ -3,15 +3,23 @@
 
 #include "../shared/shared.h"
 #include "fenprincipale.h"
-#include "client.h"
 
 class FenPrincipale;
 class Paquet;
 class Client;
 
+enum SessionState
+{
+    NOT_CHECKED,
+    CHECKED,
+    AUTHED,
+    NEVER,
+};
+
 struct OpCodeHandler
 {
     const char* nom;
+    SessionState state;
     void (FenPrincipale::*f)(Paquet *, Client*);
 };
 

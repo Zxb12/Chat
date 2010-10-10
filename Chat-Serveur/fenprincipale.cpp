@@ -176,8 +176,31 @@ void FenPrincipale::paquetRecu(Paquet *in)
 
     CONSOLE("Paquet reçu: " + handler.nom + "(" + QString::number(opCode) + ")");
 
-    //Lancement de la fonction associée.
-    (this->*handler.f)(in, client);
+    //On vérifie que le client a le droit d'envoyer ce paquet.
+    switch (handler.state)
+    {
+    case NOT_CHECKED:   //Toujours possible
+        (this->*handler.f)(in, client);
+        break;
+
+    case CHECKED:
+        if (client->getSessionState() < CHECKED)
+            kickClient(client);
+        else
+            (this->*handler.f)(in, client);
+        break;
+
+    case AUTHED:
+        if (client->getSessionState() < AUTHED)
+            kickClient(client);
+        else
+            (this->*handler.f)(in, client);
+        break;
+    case NEVER:
+        CONSOLE("Le paquet reçu n'est pas géré.");
+        kickClient(client);
+        break;
+    }
 
     //Libération de la mémoire.
     delete in;
@@ -210,6 +233,8 @@ void FenPrincipale::handleHello(Paquet* in, Client* client)
         return;
     }
 
+    client->setSessionState(CHECKED);
+
     //On peut se connecter.
     Paquet out;
     out << SMSG_HELLO;
@@ -221,7 +246,6 @@ void FenPrincipale::handleServerSide(Paquet* in, Client* client)
     CONSOLE("Paquet reçu avec un opCode de serveur.");
 }
 
-//OpCode reçu lors de la première connexion du client.
 void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
 {
     QString pseudo, login;
@@ -395,6 +419,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     client->setAccount(login);
     client->setLoginLevel(loginLevel);
     client->setIdCompte(id);
+    client->setSessionState(AUTHED);
 
     Paquet out;
     out << SMSG_AUTH_OK;
