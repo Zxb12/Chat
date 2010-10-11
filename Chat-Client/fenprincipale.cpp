@@ -353,7 +353,7 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
         }
     case SMSG_AUTH_INCORRECT_VERSION:
         {
-            QByteArray version;
+            QString version;
             *in >> version;
             appendChat("Votre version (" + QString(VERSION) + ") est incompatible avec celle du serveur (" + version + ").");
             break;
