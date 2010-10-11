@@ -41,6 +41,7 @@ protected:
 public:
     void paquetRecu(Paquet*);
     void appendChat(QString, QString);
+    void afficheBulle(QString, QString, QSystemTrayIcon::MessageIcon, int);
     void chargeConfig();
 
     void handleClientSide(Paquet*, quint16);

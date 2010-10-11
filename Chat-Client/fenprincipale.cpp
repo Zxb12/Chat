@@ -140,6 +140,17 @@ void FenPrincipale::appendChat(QString str1, QString str2 = "")
     //On efface le HTML et on le remet.
     ui->chat->clear();
     ui->chat->append(m_html); //Append fait scroll en bas
+
+}
+
+void FenPrincipale::afficheBulle(QString titre, QString msg, QSystemTrayIcon::MessageIcon icone = QSystemTrayIcon::Information, int duree = 10000)
+{
+    //On fait flasher l'application
+    QApplication::alert(this);
+
+    //Affichage d'une infobulle si la fenêtre n'a pas le focus.
+    if (!QApplication::focusWidget() && m_sysTray->supportsMessages())
+        m_sysTray->showMessage("OokChat - " + titre, msg, icone, duree);
 }
 
 void FenPrincipale::closeEvent(QCloseEvent *event)
@@ -207,6 +218,7 @@ void FenPrincipale::connecte()
 void FenPrincipale::deconnecte()
 {
     CONSOLE("Déconnecté du serveur");
+    appendChat("Déconnecté du serveur.");
     m_pseudo.clear();
     ui->chat->setEnabled(false);
     ui->message->setEnabled(false);
@@ -216,6 +228,8 @@ void FenPrincipale::deconnecte()
 
     if (m_quitOnDisconnect)
         qApp->quit();
+
+    afficheBulle("Déconnexion", "Vous avez été déconnecté du serveur.");
 }
 
 // Ce slot est appelé lorsqu'il y a une erreur
@@ -227,10 +241,9 @@ void FenPrincipale::erreurSocket(QAbstractSocket::SocketError erreur)
         appendChat(ERREUR, "Le serveur n'a pas pu être trouvé. Vérifiez l'IP et le port.");
         break;
     case QAbstractSocket::ConnectionRefusedError:
-        appendChat(ERREUR, "Le serveur a refusé la connexion. Vérifiez si le programme \"serveur\" a bien été lancé. Vérifiez aussi l'IP et le port.");
+        appendChat(ERREUR, "Le serveur a refusé la connexion. Vérifiez l'adresse, le port et le statut du serveur.");
         break;
     case QAbstractSocket::RemoteHostClosedError:
-        appendChat(ERREUR, "Le serveur a coupé la connexion.");
         break;
     default:
         appendChat(ERREUR, m_socket->errorString());
@@ -376,13 +389,8 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
             QString pseudo, message;
             *in >> pseudo >> message;
 
-            //Affichage d'une infobulle si la fenêtre n'a pas le focus.
-            if (!QApplication::focusWidget())
-            {
-                if (m_sysTray->supportsMessages())
-                    m_sysTray->showMessage("Nouveau message de " + pseudo, message,
-                                           QSystemTrayIcon::Information, 10000);
-            }
+            //Affichage de l'infobulle
+            afficheBulle("Nouveau message de " + pseudo, message);
 
             //Echappement les caractères HTML.
             Qt::escape(message);
@@ -414,6 +422,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             ui->listeConnectes->addItem(pseudo);
 
             appendChat("-->", "<em>" + pseudo + " (" + hash + ", " + QString::number(level) + ") s'est joint au Chat.</em>");
+            afficheBulle("Connexion", pseudo + " s'est joint au Chat.");
             break;
         }
     case SMSG_USER_LEFT:
@@ -429,6 +438,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
                             ui->listeConnectes->findItems(pseudo, Qt::MatchExactly).first()));
 
             appendChat("<--", "<em>" + pseudo + " (" + hash + ", " + QString::number(level) + ") a quitté le Chat : " + raison + "</em>");
+            afficheBulle("Déconnexion", pseudo + " a quitté le Chat.");
             break;
         }
     case SMSG_USER_RENAMED:
@@ -447,6 +457,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             ui->listeConnectes->findItems(ancienPseudo, Qt::MatchExactly).first()->setText(nouveauPseudo);
 
             appendChat("<em>" + ancienPseudo + " s'appelle maintenant " + nouveauPseudo + ".</em>");
+            afficheBulle("Utilisateur renommé", ancienPseudo + " s'appelle maintenant " + nouveauPseudo + ".");
             break;
         }
     case SMSG_USER_KICKED:
