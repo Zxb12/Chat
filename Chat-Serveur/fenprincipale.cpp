@@ -41,6 +41,11 @@ bool FenPrincipale::chargerFichier()
     QFile confFile("server.conf");
     if (confFile.open(QIODevice::ReadOnly))
     {
+        if (VERSION_CONFIG != QString(confFile.readLine()).remove("CONFIG_VERSION=").remove(ENDL).toInt())
+        {
+            CONSOLE("ERREUR: Le fichier de configuration n'est pas à la bonne version.");
+            return false;
+        }
 
         //Chargement depuis le fichier.
         m_serverPort =              QString(confFile.readLine()).remove("SERVER_PORT=").remove(ENDL).toInt();

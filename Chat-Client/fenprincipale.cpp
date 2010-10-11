@@ -167,7 +167,7 @@ void FenPrincipale::closeEvent(QCloseEvent *event)
     //Préparation du stream
     QDataStream out(&file);
 
-    out << ui->adresse->text() << quint16(ui->port->value()) << ui->pseudo->text() << ui->login->text();
+    out << VERSION_CONFIG << ui->adresse->text() << quint16(ui->port->value()) << ui->pseudo->text() << ui->login->text();
 
     file.close();
 }
@@ -187,8 +187,17 @@ void FenPrincipale::chargeConfig()
     QDataStream in(&file);
     QString adresse, pseudo, login;
     quint16 port;
+    quint64 versionFichier;
 
-    in >> adresse >> port >> pseudo >> login;
+    in >> versionFichier >> adresse >> port >> pseudo >> login;
+
+    //Vérification de la version du fichier.
+    if (versionFichier != VERSION_CONFIG)
+    {
+        QMessageBox::warning(this, "Erreur de chargement", "Le fichier de configuration est à la mauvaise version.\n"
+                                                           "Les paramètes ne peuvent pas être chargés.");
+        return;
+    }
 
     //Attribution des valeurs
     ui->adresse->setText(adresse);
