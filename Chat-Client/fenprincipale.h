@@ -3,7 +3,7 @@
 
 #define TAILLE_MDP_MIN  5
 #define VERSION         QString("Chat-0.0.3a")
-#define VERSION_CONFIG  quint32(2010101101)  //YYYYMMDD + Numéro de la version du jour
+#define VERSION_CONFIG  quint32(2010101102)  //YYYYMMDD + Numéro de la version du jour
 
 #include <QWidget>
 #include <QTcpSocket>
@@ -70,6 +70,7 @@ private:
 
     QString m_pseudo;
     QString m_acctName;
+    QString m_logoutMessage;
 
     bool m_quitOnDisconnect;
     QString m_html;

@@ -955,3 +955,11 @@ void FenPrincipale::handleLogout(Paquet *in, Client *client)
 
     client->getSocket()->disconnectFromHost();
 }
+
+void FenPrincipale::handleSetLogoutMsg(Paquet *in, Client *client)
+{
+    QString msg;
+    *in >> msg;
+
+    client->setLogoutMessage(msg);
+}

@@ -52,4 +52,5 @@ OpCodeHandler OpCodeTable[NB_OPCODES] =
     {"CMSG_UPDATE_CLIENTS_LIST",            &FenPrincipale::handleClientSide},
     {"SMSG_CLIENTS_LIST",                   &FenPrincipale::handleClientsList},
     {"CMSG_LOGOUT",                         &FenPrincipale::handleClientSide},
+    {"CMSG_SET_LOGOUT_MSG",                 &FenPrincipale::handleClientSide},
 };

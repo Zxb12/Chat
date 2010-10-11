@@ -48,6 +48,7 @@ public:
     void handleWhoIs(Paquet*, Client*);
     void handleUpdateClientsList(Paquet*, Client*);
     void handleLogout(Paquet*, Client*);
+    void handleSetLogoutMsg(Paquet*, Client*);
 
 
 public slots:

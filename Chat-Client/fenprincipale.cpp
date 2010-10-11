@@ -171,7 +171,7 @@ void FenPrincipale::closeEvent(QCloseEvent *event)
     //Préparation du stream
     QDataStream out(&file);
 
-    out << VERSION_CONFIG << ui->adresse->text() << quint16(ui->port->value()) << ui->pseudo->text() << ui->login->text();
+    out << VERSION_CONFIG << ui->adresse->text() << quint16(ui->port->value()) << ui->pseudo->text() << ui->login->text() << m_logoutMessage;
 
     file.close();
 }
@@ -193,7 +193,7 @@ void FenPrincipale::chargeConfig()
     quint16 port;
     quint32 versionFichier;
 
-    in >> versionFichier >> adresse >> port >> pseudo >> login;
+    in >> versionFichier >> adresse >> port >> pseudo >> login >> m_logoutMessage;
 
     //Vérification de la version du fichier.
     if (versionFichier != VERSION_CONFIG)
@@ -378,6 +378,11 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
 
             Paquet out;
             out << CMSG_UPDATE_CLIENTS_LIST;
+            out.send(m_socket);
+
+            out.clear();
+            out << CMSG_SET_LOGOUT_MSG;
+            out << m_logoutMessage;
             out.send(m_socket);
 
             break;
@@ -839,8 +844,11 @@ void FenPrincipale::handleChatCommands(QString &msg)
         //On se prépare à quitter.
         m_quitOnDisconnect = true;
 
+        if (!quitMessage.simplified().isEmpty())
+            m_logoutMessage = quitMessage;
+
         Paquet out;
-        out << CMSG_SET_LOGOUT_MSG << quitMessage;
+        out << CMSG_LOGOUT << quitMessage;
         out.send(m_socket);
     }
     else if (args[0] == "/logout" || args[0] == "/deco")
@@ -849,11 +857,14 @@ void FenPrincipale::handleChatCommands(QString &msg)
         for (int i = 1; i < args.size(); i++)
             logoutMessage += (args[i] + ' ');
 
+        if (!logoutMessage.simplified().isEmpty())
+            m_logoutMessage = logoutMessage;
+
         //On se prépare à quitter.
         m_quitOnDisconnect = false;
 
         Paquet out;
-        out << CMSG_SET_LOGOUT_MSG << logoutMessage;
+        out << CMSG_LOGOUT << m_logoutMessage;
         out.send(m_socket);
     }
     else

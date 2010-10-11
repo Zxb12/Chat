@@ -1,7 +1,7 @@
 #ifndef SHARED_H
 #define SHARED_H
 
-#define NB_OPCODES 0x32
+#define NB_OPCODES 0x33
 
 enum OpCodeValues
 {
@@ -54,7 +54,8 @@ enum OpCodeValues
     SMSG_WHOIS                      = 0x2e,
     CMSG_UPDATE_CLIENTS_LIST        = 0x2f,
     SMSG_CLIENTS_LIST               = 0x30,
-    CMSG_SET_LOGOUT_MSG             = 0x31,
+    CMSG_LOGOUT                     = 0x31,
+    CMSG_SET_LOGOUT_MSG             = 0x32,
 };
 
 #endif // SHARED_H
