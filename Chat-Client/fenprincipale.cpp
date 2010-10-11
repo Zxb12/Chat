@@ -187,7 +187,7 @@ void FenPrincipale::chargeConfig()
     QDataStream in(&file);
     QString adresse, pseudo, login;
     quint16 port;
-    quint64 versionFichier;
+    quint32 versionFichier;
 
     in >> versionFichier >> adresse >> port >> pseudo >> login;
 
