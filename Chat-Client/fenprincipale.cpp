@@ -52,11 +52,15 @@ void FenPrincipale::on_pseudo_returnPressed()
 
 void FenPrincipale::on_connecter_clicked()
 {
-    // On annonce sur la fenêtre qu'on est en train de se connecter
+    m_socket->abort(); // On désactive les connexions précédentes s'il y en a
+
+    //On vide la fenêtre de chat
+    ui->chat->clear();
+    m_html.clear();
+
+    //On tente de se connecter
     CONSOLE("Tentative de connexion en cours...");
     ui->connecter->setEnabled(false);
-
-    m_socket->abort(); // On désactive les connexions précédentes s'il y en a
     m_socket->connectToHost(ui->adresse->text(), ui->port->value()); // On se connecte au serveur demandé
 }
 
