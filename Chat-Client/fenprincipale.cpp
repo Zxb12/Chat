@@ -410,12 +410,9 @@ void FenPrincipale::handleChat(Paquet *in, quint16 opCode)
             //Affichage de l'infobulle
             afficheBulle("Nouveau message de " + pseudo, message);
 
-            //Echappement les caractères HTML.
-            Qt::escape(message);
+            pseudo = "<strong>&lt;" + Qt::escape(pseudo) + "&gt;</strong> ";
 
-            pseudo = "<strong>&lt;" + pseudo + "&gt;</strong> ";
-
-            appendChat(pseudo, message);
+            appendChat(pseudo, Qt::escape(message));
 
         }
         break;
@@ -439,7 +436,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             //Mise à jour de la liste des connectés
             ui->listeConnectes->addItem(pseudo);
 
-            appendChat("-->", "<em>" + pseudo + " (" + hash + ", " + QString::number(level) + ") s'est joint au Chat.</em>");
+            appendChat("-->", "<em>" + Qt::escape(pseudo) + " (" + hash + ", " + QString::number(level) + ") s'est joint au Chat.</em>");
             afficheBulle("Connexion", pseudo + " s'est joint au Chat.");
             break;
         }
@@ -455,7 +452,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
                     ui->listeConnectes->row(
                             ui->listeConnectes->findItems(pseudo, Qt::MatchExactly).first()));
 
-            appendChat("<--", "<em>" + pseudo + " (" + hash + ", " + QString::number(level) + ") a quitté le Chat : " + raison + "</em>");
+            appendChat("<--", "<em>" + Qt::escape(pseudo) + " (" + hash + ", " + QString::number(level) + ") a quitté le Chat : " + Qt::escape(raison) + "</em>");
             afficheBulle("Déconnexion", pseudo + " a quitté le Chat.");
             break;
         }
@@ -474,7 +471,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             //Mise à jour de la liste de connectés
             ui->listeConnectes->findItems(ancienPseudo, Qt::MatchExactly).first()->setText(nouveauPseudo);
 
-            appendChat("<em>" + ancienPseudo + " s'appelle maintenant " + nouveauPseudo + ".</em>");
+            appendChat("<em>" + Qt::escape(ancienPseudo) + " s'appelle maintenant " + Qt::escape(nouveauPseudo) + ".</em>");
             afficheBulle("Utilisateur renommé", ancienPseudo + " s'appelle maintenant " + nouveauPseudo + ".");
             break;
         }
@@ -483,7 +480,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             QString pseudo, kickPar, raison;
             *in >> kickPar >> pseudo >> raison;
 
-            appendChat("<--", "<em> " + pseudo + " a été kické par " + kickPar + ". Raison: " + raison + "</em>");
+            appendChat("<--", "<em> " + Qt::escape(pseudo) + " a été kické par " + Qt::escape(kickPar) + ". Raison: " + Qt::escape(raison) + "</em>");
             break;
         }
     case SMSG_USER_BANNED:
@@ -491,7 +488,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             QString pseudo, banPar, raison;
             *in >> banPar >> pseudo >> raison;
 
-            appendChat("<--", "<em> " + pseudo + " a été banni par " + banPar + ". Raison: " + raison + "</em>");
+            appendChat("<--", "<em> " + Qt::escape(pseudo) + " a été banni par " + Qt::escape(banPar) + ". Raison: " + Qt::escape(raison) + "</em>");
             break;
         }
     case SMSG_USER_VOICED:
@@ -499,7 +496,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             QString pseudo, voicePar;
             *in >> pseudo >> voicePar;
 
-            appendChat("<em> " + pseudo + " a été voicé par " + voicePar + ".</em>");
+            appendChat("<em> " + Qt::escape(pseudo) + " a été voicé par " + Qt::escape(voicePar) + ".</em>");
             break;
         }
     default:
@@ -631,8 +628,8 @@ void FenPrincipale::handleWhoIs(Paquet *in, quint16 opCode)
 
     *in >> pseudo >> compte >> niveau >> ping >> hashIP;
 
-    appendChat(SUCCES, "Whois: " + pseudo);
-    appendChat("Compte: " + compte);
+    appendChat(SUCCES, "Whois: " + Qt::escape(pseudo));
+    appendChat("Compte: " + Qt::escape(compte));
     appendChat("Niveau de compte: " + QString::number(niveau));
     appendChat("Ping: " + QString::number(ping) + "ms");
     appendChat("Hash de l'IP: " + hashIP);
