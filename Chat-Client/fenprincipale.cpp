@@ -32,7 +32,6 @@ m_quitOnDisconnect(false), m_html("")
     ui->message->setEnabled(false);
     ui->envoyer->setEnabled(false);
     ui->listeConnectes->setEnabled(false);
-    ui->connecter->setFocus();
 
     ui->chat->setHtml(m_html);
 }
@@ -49,6 +48,10 @@ void FenPrincipale::on_pseudo_returnPressed()
     on_connecter_clicked();
 }
 
+void FenPrincipale::on_password_returnPressed()
+{
+    on_connecter_clicked();
+}
 
 void FenPrincipale::on_connecter_clicked()
 {
@@ -208,6 +211,17 @@ void FenPrincipale::chargeConfig()
     ui->port->setValue(port);
     ui->pseudo->setText(pseudo);
     ui->login->setText(login);
+
+    ui->password->setFocus();
+    if (ui->login->text().isEmpty())
+        ui->login->setFocus();
+    if (ui->pseudo->text().isEmpty())
+        ui->pseudo->setFocus();
+    if (ui->port->value() == 0)
+        ui->port->setFocus();
+    if (ui->adresse->text().isEmpty())
+        ui->adresse->setFocus();
+
 }
 
 
@@ -216,9 +230,6 @@ void FenPrincipale::connecte()
 {
     CONSOLE("Connexion réussie !");
     ui->connecter->setEnabled(true);
-
-    //On sélectionne la zone de message.
-    ui->message->setFocus();
 
     //On envoie le Hello
     Paquet out;
@@ -373,6 +384,9 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
             ui->message->setEnabled(true);
             ui->envoyer->setEnabled(true);
             ui->listeConnectes->setEnabled(true);
+
+            //On sélectionne la zone de message.
+            ui->message->setFocus();
 
             *in >> m_pseudo;
 

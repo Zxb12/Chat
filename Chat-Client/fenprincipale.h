@@ -77,6 +77,7 @@ private:
 
 private slots:
     void on_pseudo_returnPressed();
+    void on_password_returnPressed();
     void on_connecter_clicked();
     void on_envoyer_clicked();
     void on_message_returnPressed();
