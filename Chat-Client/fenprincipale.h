@@ -5,7 +5,7 @@
 #define VERSION         QString("Chat-0.0.3a")
 #define VERSION_CONFIG  quint32(2010101102)  //YYYYMMDD + Numéro de la version du jour
 
-#include <QWidget>
+#include <QMainWindow>
 #include <QTcpSocket>
 #include <QTime>
 #include <QCryptographicHash>
@@ -22,11 +22,11 @@ namespace Ui
     class FenPrincipale;
 }
 
-class FenPrincipale : public QWidget
+class FenPrincipale : public QMainWindow
 {
     Q_OBJECT
 public:
-    FenPrincipale(QWidget *parent = 0);
+    FenPrincipale(QMainWindow *parent = 0);
     ~FenPrincipale();
 
 public slots:
