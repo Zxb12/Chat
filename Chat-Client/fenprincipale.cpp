@@ -160,7 +160,7 @@ void FenPrincipale::afficheBulle(QString titre, QString msg, QSystemTrayIcon::Me
         m_sysTray->showMessage("OokChat - " + titre, msg, icone, duree);
 }
 
-void FenPrincipale::closeEvent(QCloseEvent *event)
+void FenPrincipale::closeEvent(QCloseEvent */*event*/)
 {
     //Ouverture du fichier.
     QFile file("chat.conf");
@@ -305,12 +305,12 @@ void FenPrincipale::paquetRecu(Paquet *in)
     delete in;
 }
 
-void FenPrincipale::handleClientSide(Paquet *in, quint16 opCode)
+void FenPrincipale::handleClientSide(Paquet */*in*/, quint16 /*opCode*/)
 {
     CONSOLE("ERREUR: OpCode de client reçu.");
 }
 
-void FenPrincipale::handleHello(Paquet *in, quint16 opCode)
+void FenPrincipale::handleHello(Paquet */*in*/, quint16 /*opCode*/)
 {
     QByteArray pwhash = QCryptographicHash::hash(ui->password->text().toUtf8(), QCryptographicHash::Sha1);
 
@@ -407,7 +407,7 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
     }
 }
 
-void FenPrincipale::handleKick(Paquet *in, quint16 opCode)
+void FenPrincipale::handleKick(Paquet */*in*/, quint16 /*opCode*/)
 {
     appendChat("<em>Vous avez été kické par le serveur.</em>");
 }
@@ -519,7 +519,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
     }
 }
 
-void FenPrincipale::handlePing(Paquet *in, quint16 opCode)
+void FenPrincipale::handlePing(Paquet *in, quint16 /*opCode*/)
 {
     quint32 time;
     *in >> time;
@@ -601,7 +601,7 @@ void FenPrincipale::handleLevelMod(Paquet *in, quint16 opCode)
 
 }
 
-void FenPrincipale::handleError(Paquet *in, quint16 opCode)
+void FenPrincipale::handleError(Paquet */*in*/, quint16 opCode)
 {
     switch (opCode)
     {
@@ -633,7 +633,7 @@ void FenPrincipale::handleError(Paquet *in, quint16 opCode)
 
 }
 
-void FenPrincipale::handleWhoIs(Paquet *in, quint16 opCode)
+void FenPrincipale::handleWhoIs(Paquet *in, quint16 /*opCode*/)
 {
     QString pseudo, compte;
     quint8 niveau;
@@ -649,7 +649,7 @@ void FenPrincipale::handleWhoIs(Paquet *in, quint16 opCode)
     appendChat("Hash de l'IP: " + hashIP);
 }
 
-void FenPrincipale::handleClientsList(Paquet *in, quint16 opCode)
+void FenPrincipale::handleClientsList(Paquet *in, quint16 /*opCode*/)
 {
     ui->listeConnectes->clear();
 

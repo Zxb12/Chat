@@ -246,7 +246,7 @@ void FenPrincipale::handleHello(Paquet* in, Client* client)
     out.send(client->getSocket());
 }
 
-void FenPrincipale::handleServerSide(Paquet* in, Client* client)
+void FenPrincipale::handleServerSide(Paquet* /*in*/, Client* /*client*/)
 {
     CONSOLE("Paquet reçu avec un opCode de serveur.");
 }
@@ -774,7 +774,7 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
     kickClient(clientABannir);
 }
 
-void FenPrincipale::handleVoice(Paquet *in, Client *client)
+void FenPrincipale::handleVoice(Paquet */*in*/, Client */*client*/)
 {
 
 }
@@ -926,7 +926,7 @@ void FenPrincipale::handleWhoIs(Paquet *in, Client *client)
     out >> client->getSocket();
 }
 
-void FenPrincipale::handleUpdateClientsList(Paquet *in, Client *client)
+void FenPrincipale::handleUpdateClientsList(Paquet */*in*/, Client *client)
 {
     //OpCode - size - pseudos
     QStringList pseudos;
