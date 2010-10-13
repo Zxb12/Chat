@@ -251,19 +251,16 @@ p, li { white-space: pre-wrap; }
      <addaction name="actionKick"/>
      <addaction name="actionBan"/>
      <addaction name="actionEnregistrement"/>
-     <addaction name="actionModification_de_niveau"/>
+     <addaction name="actionModificationDeNiveau"/>
     </widget>
     <addaction name="menuGestion"/>
-    <addaction name="actionMessage_de_d_connexion"/>
+    <addaction name="actionMessageDeDeconnexion"/>
    </widget>
    <addaction name="menuFichier"/>
    <addaction name="menuChat"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionConnecter">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
    <property name="text">
     <string>Connecter</string>
    </property>
@@ -288,12 +285,12 @@ p, li { white-space: pre-wrap; }
     <string>Enregistrement</string>
    </property>
   </action>
-  <action name="actionModification_de_niveau">
+  <action name="actionModificationDeNiveau">
    <property name="text">
     <string>Modification de niveau</string>
    </property>
   </action>
-  <action name="actionMessage_de_d_connexion">
+  <action name="actionMessageDeDeconnexion">
    <property name="text">
     <string>Message de déconnexion</string>
    </property>
