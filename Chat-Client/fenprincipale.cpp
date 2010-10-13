@@ -5,7 +5,7 @@
 #define ERREUR     "<strong style=\"color:#ff0000\">Erreur: </strong>"
 #define SUCCES     "<strong style=\"color:#33ff66\">Succès: </strong>"
 
-FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenPrincipale), m_taillePaquet(0), m_acctName(""),
+FenPrincipale::FenPrincipale(QMainWindow *parent) : QMainWindow(parent), ui(new Ui::FenPrincipale), m_taillePaquet(0), m_acctName(""),
 m_quitOnDisconnect(false), m_html("")
 {
     ui->setupUi(this);
