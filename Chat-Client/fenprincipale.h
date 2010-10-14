@@ -13,6 +13,7 @@
 #include <QMenu>
 #include <QFile>
 #include <QMessageBox>
+#include <QInputDialog>
 
 #include "../shared/paquet.h"
 #include "opcode.h"
@@ -33,10 +34,17 @@ public slots:
     void donneesRecues();
     void erreurSocket(QAbstractSocket::SocketError erreur);
     void seConnecter();
+    void seDeconnecter();
     void connecte();
     void deconnecte();
     void envoyerMessage();
     void premierPlan();
+
+    void ui_kick();
+    void ui_ban();
+    void ui_register();
+    void ui_modLevel();
+    void ui_logoutMessage();
 
 protected:
     void closeEvent(QCloseEvent *);

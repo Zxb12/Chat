@@ -14,9 +14,19 @@ m_quitOnDisconnect(false), m_html("")
     this->setWindowTitle("OokChat - " + VERSION);
     chargeConfig();
 
-    connect(ui->pseudo, SIGNAL(returnPressed()), this, SLOT(seConnecter()));
-    connect(ui->password, SIGNAL(returnPressed()), this, SLOT(seConnecter()));
-    connect(ui->message, SIGNAL(returnPressed()), this, SLOT(envoyerMessage()));
+    connect(ui->connecter, SIGNAL(clicked()),                       this, SLOT(seConnecter()));
+    connect(ui->pseudo, SIGNAL(returnPressed()),                    this, SLOT(seConnecter()));
+    connect(ui->password, SIGNAL(returnPressed()),                  this, SLOT(seConnecter()));
+    connect(ui->message, SIGNAL(returnPressed()),                   this, SLOT(envoyerMessage()));
+
+    connect(ui->actionConnecter, SIGNAL(triggered()),               this, SLOT(seConnecter()));
+    connect(ui->actionDeconnexion, SIGNAL(triggered()),             this, SLOT(seDeconnecter()));
+    connect(ui->actionKick, SIGNAL(triggered()),                    this, SLOT(ui_kick()));
+    connect(ui->actionBan, SIGNAL(triggered()),                     this, SLOT(ui_ban()));
+    connect(ui->actionEnregistrement, SIGNAL(triggered()),          this, SLOT(ui_register()));
+    connect(ui->actionModificationDeNiveau, SIGNAL(triggered()),    this, SLOT(ui_modLevel()));
+    connect(ui->actionMessageDeDeconnexion, SIGNAL(triggered()),    this, SLOT(ui_logoutMessage()));
+    connect(ui->actionQuitter, SIGNAL(triggered()),                 qApp, SLOT(quit()));
 
     QMenu *menu = new QMenu("Chat", this);
     menu->addAction("Pas d'actions définies !");
@@ -35,6 +45,11 @@ m_quitOnDisconnect(false), m_html("")
     ui->chat->setEnabled(false);
     ui->message->setEnabled(false);
     ui->envoyer->setEnabled(false);
+    ui->actionDeconnexion->setEnabled(false);
+    ui->actionKick->setEnabled(false);
+    ui->actionBan->setEnabled(false);
+    ui->actionEnregistrement->setEnabled(false);
+    ui->actionModificationDeNiveau->setEnabled(false);
     ui->listeConnectes->setEnabled(false);
 
     ui->chat->setHtml(m_html);
@@ -49,7 +64,7 @@ FenPrincipale::~FenPrincipale()
 
 void FenPrincipale::seConnecter()
 {
-    m_socket->abort(); // On désactive les connexions précédentes s'il y en a
+    seDeconnecter(); // On désactive les connexions précédentes s'il y en a
 
     //On vide la fenêtre de chat
     ui->chat->clear();
@@ -58,7 +73,13 @@ void FenPrincipale::seConnecter()
     //On tente de se connecter
     CONSOLE("Tentative de connexion en cours...");
     ui->connecter->setEnabled(false);
+    ui->actionConnecter->setEnabled(false);
     m_socket->connectToHost(ui->adresse->text(), ui->port->value()); // On se connecte au serveur demandé
+}
+
+void FenPrincipale::seDeconnecter()
+{
+    m_socket->disconnectFromHost();
 }
 
 // Envoi d'un message au serveur
@@ -218,12 +239,13 @@ void FenPrincipale::connecte()
 {
     CONSOLE("Connexion réussie !");
     ui->connecter->setEnabled(true);
+    ui->actionConnecter->setEnabled(true);
 
     //On envoie le Hello
     Paquet out;
     out << CMSG_HELLO;
     out << VERSION;
-    out.send(m_socket);
+    out >> m_socket;
 }
 
 // Ce slot est appelé lorsqu'on est déconnecté du serveur
@@ -235,6 +257,11 @@ void FenPrincipale::deconnecte()
     ui->chat->setEnabled(false);
     ui->message->setEnabled(false);
     ui->envoyer->setEnabled(false);
+    ui->actionDeconnexion->setEnabled(false);
+    ui->actionKick->setEnabled(false);
+    ui->actionBan->setEnabled(false);
+    ui->actionEnregistrement->setEnabled(false);
+    ui->actionModificationDeNiveau->setEnabled(false);
     ui->listeConnectes->setEnabled(false);
     ui->listeConnectes->clear();
 
@@ -262,6 +289,7 @@ void FenPrincipale::erreurSocket(QAbstractSocket::SocketError erreur)
     }
 
     ui->connecter->setEnabled(true);
+    ui->actionConnecter->setEnabled(true);
 }
 
 void FenPrincipale::paquetRecu(Paquet *in)
@@ -368,9 +396,15 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
         {
             appendChat("Authentification réussie.");
 
+            //On active le chat
             ui->chat->setEnabled(true);
             ui->message->setEnabled(true);
             ui->envoyer->setEnabled(true);
+            ui->actionDeconnexion->setEnabled(true);
+            ui->actionKick->setEnabled(true);
+            ui->actionBan->setEnabled(true);
+            ui->actionEnregistrement->setEnabled(true);
+            ui->actionModificationDeNiveau->setEnabled(true);
             ui->listeConnectes->setEnabled(true);
 
             //On sélectionne la zone de message.
@@ -380,12 +414,12 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
 
             Paquet out;
             out << CMSG_UPDATE_CLIENTS_LIST;
-            out.send(m_socket);
+            out >> m_socket;
 
             out.clear();
             out << CMSG_SET_LOGOUT_MSG;
             out << m_logoutMessage;
-            out.send(m_socket);
+            out >> m_socket;
 
             break;
         }
@@ -848,7 +882,7 @@ void FenPrincipale::handleChatCommands(QString &msg)
 
         Paquet out;
         out << CMSG_LOGOUT << quitMessage;
-        out.send(m_socket);
+        out >> m_socket;
     }
     else if (args[0] == "/logout" || args[0] == "/deco")
     {
@@ -864,11 +898,115 @@ void FenPrincipale::handleChatCommands(QString &msg)
 
         Paquet out;
         out << CMSG_LOGOUT << m_logoutMessage;
-        out.send(m_socket);
+        out >> m_socket;
     }
     else
     {
         appendChat(ERREUR, "Commande chat invalide.");
     }
     msg.clear();
+}
+
+void FenPrincipale::ui_kick()
+{
+    QString quiKicker, raison;
+    quiKicker = QInputDialog::getText(this, "OokChat", "Qui voulez-vous kicker ?").trimmed();
+
+    //Si on n'a personne à kicker, on quitte
+    if (quiKicker.isEmpty())
+        return;
+
+    raison = QInputDialog::getText(this, "OokChat", "Pour quelle raison ?").trimmed();
+
+    Paquet out;
+    out << CMSG_KICK << quiKicker << raison;
+    out >> m_socket;
+}
+
+//TODO: Ajouter une gestion de la date d'expiration.
+void FenPrincipale::ui_ban()
+{
+    QString quiBannir, raison;
+    quiBannir = QInputDialog::getText(this, "OokChat", "Qui voulez-vous bannir ?").trimmed();
+
+    //Si on n'a personne à kicker, on quitte
+    if (quiBannir.isEmpty())
+        return;
+
+    raison = QInputDialog::getText(this, "OokChat", "Pour quelle raison ?").trimmed();
+
+    Paquet out;
+    out << CMSG_BAN << quiBannir <<  quint32(0) << raison;
+    out >> m_socket;
+}
+
+void FenPrincipale::ui_register()
+{
+    QString login, pass, passConfirme;
+    login = QInputDialog::getText(this, "OokChat", "Entrez le nom de compte").trimmed();
+    //Si on n'a pas de compte, on quitte
+    if (login.isEmpty())
+        return;
+
+    pass = QInputDialog::getText(this, "OokChat", "Entrez votre mot de passe", QLineEdit::Password).trimmed();
+    if (pass.isEmpty())
+        return;
+    if (pass.size() < TAILLE_MDP_MIN)
+    {
+        appendChat(ERREUR, "Le mot de passe spécifié est trop court.");
+        return;
+    }
+
+    passConfirme = QInputDialog::getText(this, "OokChat", "Confirmez votre mot de passe", QLineEdit::Password).trimmed();
+    if (passConfirme.isEmpty())
+        return;
+    if (pass != passConfirme)   //Vérifie que les mots de passe correspondent
+    {
+        appendChat(ERREUR, "Les mots de passe ne correspondent pas.");
+        return;
+    }
+
+    //On peut s'enregistrer
+    QByteArray hash;
+    hash = QCryptographicHash::hash(pass.toUtf8(), QCryptographicHash::Sha1);
+
+    Paquet out;
+    out << CMSG_REGISTER << login << hash;
+    out >> m_socket;
+}
+
+void FenPrincipale::ui_modLevel()
+{
+    QString compte;
+    quint8 level;
+    bool ok = false;
+
+    compte = QInputDialog::getText(this, "OokChat", "Quel compte modifier ?").trimmed();
+    if (compte.isEmpty())   //Vérification des données
+        return;
+
+    level = QInputDialog::getInt(this, "OokChat", "Mettre ce compte à quel niveau ?", 1, 1, 255, 1, &ok);
+    if (!ok)
+        return;
+
+    Paquet out;
+    out << CMSG_LVL_MOD << compte << level;
+    out >> m_socket;
+}
+
+void FenPrincipale::ui_logoutMessage()
+{
+    QString message;
+
+    message = QInputDialog::getText(this, "OokChat", "Entrez votre message de déconnexion").trimmed();
+    if (message.isEmpty())
+        return;
+
+    m_logoutMessage = message;
+    if (m_socket->isWritable())
+    {
+        Paquet out;
+        out << CMSG_SET_LOGOUT_MSG << message;
+        out >> m_socket;
+    }
 }

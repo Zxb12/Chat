@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="ressources.qrc">
+   <iconset>
     <normaloff>:/icones/24</normaloff>:/icones/24</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -305,8 +305,6 @@ p, li { white-space: pre-wrap; }
    </property>
   </action>
  </widget>
- <resources>
-  <include location="ressources.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>
