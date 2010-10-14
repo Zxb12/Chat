@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <property name="windowIcon">
-   <iconset>
+   <iconset resource="ressources.qrc">
     <normaloff>:/icones/24</normaloff>:/icones/24</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -30,6 +30,9 @@
       </item>
       <item row="0" column="1">
        <widget class="QLineEdit" name="adresse">
+        <property name="statusTip">
+         <string>Adresse du serveur</string>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -44,6 +47,9 @@
       </item>
       <item row="1" column="1">
        <widget class="QSpinBox" name="port">
+        <property name="statusTip">
+         <string>Port du serveur</string>
+        </property>
         <property name="minimum">
          <number>1</number>
         </property>
@@ -67,6 +73,9 @@
       </item>
       <item row="2" column="1">
        <widget class="QLineEdit" name="pseudo">
+        <property name="statusTip">
+         <string>Pseudo de connexion</string>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -74,6 +83,9 @@
       </item>
       <item row="3" column="1">
        <widget class="QPushButton" name="connecter">
+        <property name="statusTip">
+         <string>Se connecter avec les paramètres spécifiés</string>
+        </property>
         <property name="text">
          <string>Connecter</string>
         </property>
@@ -111,6 +123,9 @@
       </item>
       <item row="1" column="3">
        <widget class="QLineEdit" name="login">
+        <property name="statusTip">
+         <string>Identifiant de compte</string>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -128,6 +143,9 @@
       </item>
       <item row="2" column="3">
        <widget class="QLineEdit" name="password">
+        <property name="statusTip">
+         <string>Mot de passe de compte</string>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -160,6 +178,9 @@
           <height>0</height>
          </size>
         </property>
+        <property name="statusTip">
+         <string>Liste des connectés</string>
+        </property>
         <property name="sortingEnabled">
          <bool>true</bool>
         </property>
@@ -172,6 +193,9 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="statusTip">
+         <string>Zone de chat</string>
         </property>
         <property name="readOnly">
          <bool>true</bool>
@@ -190,10 +214,17 @@ p, li { white-space: pre-wrap; }
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QLineEdit" name="message"/>
+       <widget class="QLineEdit" name="message">
+        <property name="statusTip">
+         <string>Ecrire un message</string>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QPushButton" name="envoyer">
+        <property name="statusTip">
+         <string>Envoyer un message</string>
+        </property>
         <property name="text">
          <string>Envoyer</string>
         </property>
@@ -219,6 +250,9 @@ p, li { white-space: pre-wrap; }
        <font>
         <family>Courier New</family>
        </font>
+      </property>
+      <property name="statusTip">
+       <string>Console de débug</string>
       </property>
       <property name="readOnly">
        <bool>true</bool>
@@ -249,6 +283,9 @@ p, li { white-space: pre-wrap; }
      <string>Chat</string>
     </property>
     <widget class="QMenu" name="menuGestion">
+     <property name="statusTip">
+      <string>Gestion du serveur</string>
+     </property>
      <property name="title">
       <string>Gestion</string>
      </property>
@@ -268,43 +305,69 @@ p, li { white-space: pre-wrap; }
    <property name="text">
     <string>Connecter</string>
    </property>
+   <property name="statusTip">
+    <string>Se connecter avec les paramètres spécifiés</string>
+   </property>
   </action>
   <action name="actionQuitter">
    <property name="text">
     <string>Quitter</string>
+   </property>
+   <property name="statusTip">
+    <string>Quitter OokChat</string>
    </property>
   </action>
   <action name="actionKick">
    <property name="text">
     <string>Kick</string>
    </property>
+   <property name="statusTip">
+    <string>Kicker une personne</string>
+   </property>
   </action>
   <action name="actionBan">
    <property name="text">
     <string>Ban</string>
+   </property>
+   <property name="statusTip">
+    <string>Bannir une personne</string>
    </property>
   </action>
   <action name="actionEnregistrement">
    <property name="text">
     <string>Enregistrement</string>
    </property>
+   <property name="statusTip">
+    <string>S'enregistrer auprès du serveur</string>
+   </property>
   </action>
   <action name="actionModificationDeNiveau">
    <property name="text">
     <string>Modification de niveau</string>
+   </property>
+   <property name="statusTip">
+    <string>Modifier le niveau d'un compte</string>
    </property>
   </action>
   <action name="actionMessageDeDeconnexion">
    <property name="text">
     <string>Message de déconnexion</string>
    </property>
+   <property name="statusTip">
+    <string>Définir le message de déconnexion</string>
+   </property>
   </action>
   <action name="actionDeconnexion">
    <property name="text">
     <string>Déconnecter</string>
    </property>
+   <property name="statusTip">
+    <string>Se déconnecter du serveur</string>
+   </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="ressources.qrc"/>
+ </resources>
  <connections/>
 </ui>

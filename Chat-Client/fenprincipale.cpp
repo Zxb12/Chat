@@ -12,6 +12,7 @@ m_quitOnDisconnect(false), m_html("")
 
     //Préparation de l'UI
     this->setWindowTitle("OokChat - " + VERSION);
+    ui->statusbar->addWidget(new QLabel("Prêt"));
     chargeConfig();
 
     connect(ui->connecter, SIGNAL(clicked()),                       this, SLOT(seConnecter()));
