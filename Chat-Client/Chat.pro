@@ -1,8 +1,9 @@
 # -------------------------------------------------
-# Project created by QtCreator 2010-08-25T16:49:14
+# Project created 2010-08-25T16:49:14 by Zxb12
+# Chat Client
 # -------------------------------------------------
 QT += network
-TARGET = Chat
+TARGET = Chat-Client
 TEMPLATE = app
 SOURCES += main.cpp \
     fenprincipale.cpp \
@@ -16,3 +17,6 @@ FORMS += fenprincipale.ui
 
 RESOURCES += \
     ressources.qrc
+
+MOC_DIR += tmp/moc/
+OBJECTS_DIR += tmp/obj/

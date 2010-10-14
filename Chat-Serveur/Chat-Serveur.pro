@@ -1,5 +1,6 @@
 # -------------------------------------------------
-# Project created by QtCreator 2010-08-25T18:25:52
+# Project created 2010-08-25T18:25:52 by Zxb12
+# Chat Server.
 # -------------------------------------------------
 QT += network \
     sql
@@ -16,3 +17,6 @@ HEADERS += fenprincipale.h \
     opcode.h \
     ../shared/paquet.h
 FORMS += fenprincipale.ui
+
+MOC_DIR += tmp/moc/
+OBJECTS_DIR += tmp/obj/

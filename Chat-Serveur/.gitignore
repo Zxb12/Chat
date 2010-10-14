@@ -1,5 +1,6 @@
 debug/
 release/
+tmp/
 Chat-Serveur.pro.user
 Makefile*
 ui_*
