@@ -635,6 +635,9 @@ void FenPrincipale::handleError(Paquet */*in*/, quint16 opCode)
     case SMSG_NICK_TOO_SHORT:
         appendChat(ERREUR, "Pseudo trop court.");
         break;
+    case SMSG_NICK_TOO_LONG:
+        appendChat(ERREUR, "Pseudo trop long.");
+        break;
     case SMSG_INVALID_MESSAGE:
         appendChat(ERREUR, "Le message envoyé est invalide");
         break;

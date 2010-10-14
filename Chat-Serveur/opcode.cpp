@@ -15,6 +15,7 @@ OpCodeHandler OpCodeTable[NB_OPCODES] =
     {"CMSG_SET_NICK",                       AUTHED,      &FenPrincipale::handleSetNick},
     {"SMSG_NICK_ALREADY_IN_USE",            NEVER,       &FenPrincipale::handleServerSide},
     {"SMSG_NICK_TOO_SHORT",                 NEVER,       &FenPrincipale::handleServerSide},
+    {"SMSG_NICK_TOO_LONG",                  NEVER,       &FenPrincipale::handleServerSide},
     {"SMSG_KICK",                           NEVER,       &FenPrincipale::handleServerSide},
     {"CMSG_CHAT_MESSAGE",                   AUTHED,      &FenPrincipale::handleChatMessage},
     {"SMSG_CHAT_MESSAGE",                   NEVER,       &FenPrincipale::handleServerSide},

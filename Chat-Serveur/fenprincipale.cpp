@@ -41,6 +41,7 @@ bool FenPrincipale::chargerFichier()
     QFile confFile("server.conf");
     if (confFile.open(QIODevice::ReadOnly))
     {
+        //Vérification de la version du fichier.
         if (VERSION_CONFIG != QString(confFile.readLine()).remove("CONFIG_VERSION=").remove(ENDL).toInt())
         {
             CONSOLE("ERREUR: Le fichier de configuration n'est pas à la bonne version.");
@@ -56,7 +57,8 @@ bool FenPrincipale::chargerFichier()
         m_pingInterval =            QString(confFile.readLine()).remove("PING_INTERVAL=").remove(ENDL).toInt();
         m_maxPingsPending =         QString(confFile.readLine()).remove("MAX_PINGS_PENDING=").remove(ENDL).toInt();
         m_nickMinLength =           QString(confFile.readLine()).remove("NICK_MIN_LENGTH=").remove(ENDL).toInt();
-        m_accountNameMinLength =    QString(confFile.readLine()).remove("ACCOUT_NAME_MIN_LENGTH=").remove(ENDL).toInt();
+        m_nickMaxLength =           QString(confFile.readLine()).remove("NICK_MAX_LENGTH=").remove(ENDL).toInt();
+        m_accountNameMinLength =    QString(confFile.readLine()).remove("ACCOUNT_NAME_MIN_LENGTH=").remove(ENDL).toInt();
         m_levelMax =                QString(confFile.readLine()).remove("LVL_MAX=").remove(ENDL).toInt();
         m_registerLevel =           QString(confFile.readLine()).remove("REGISTER_LVL=").remove(ENDL).toInt();
         m_kickLevel =               QString(confFile.readLine()).remove("KICK_LVL=").remove(ENDL).toInt();
@@ -455,6 +457,14 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
         CONSOLE("ERREUR: Nommage impossible, pseudo trop court.");
         Paquet out;
         out << SMSG_NICK_TOO_SHORT;
+        out >> client->getSocket();
+        return;
+    }
+    if (pseudo.size() > m_nickMaxLength)
+    {
+        CONSOLE("ERREUR: Nommage impossible, pseudo trop long.");
+        Paquet out;
+        out << SMSG_NICK_TOO_LONG;
         out >> client->getSocket();
         return;
     }
