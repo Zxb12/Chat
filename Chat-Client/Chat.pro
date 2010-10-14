@@ -13,3 +13,6 @@ HEADERS += fenprincipale.h \
     ../shared/shared.h \
     ../shared/paquet.h
 FORMS += fenprincipale.ui
+
+RESOURCES += \
+    ressources.qrc

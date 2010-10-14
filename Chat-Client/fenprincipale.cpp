@@ -17,7 +17,7 @@ m_quitOnDisconnect(false), m_html("")
     QMenu *menu = new QMenu("Chat", this);
     menu->addAction("Pas d'actions définies !");
 
-    m_sysTray = new QSystemTrayIcon(QIcon("access.png"), this);
+    m_sysTray = new QSystemTrayIcon(QIcon(":/icones/32"), this);
     connect(m_sysTray, SIGNAL(messageClicked()), this, SLOT(premierPlan()));
     m_sysTray->setContextMenu(menu);
     m_sysTray->show();
