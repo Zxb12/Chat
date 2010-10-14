@@ -14,6 +14,10 @@ m_quitOnDisconnect(false), m_html("")
     this->setWindowTitle("OokChat - " + VERSION);
     chargeConfig();
 
+    connect(ui->pseudo, SIGNAL(returnPressed()), this, SLOT(seConnecter()));
+    connect(ui->password, SIGNAL(returnPressed()), this, SLOT(seConnecter()));
+    connect(ui->message, SIGNAL(returnPressed()), this, SLOT(envoyerMessage()));
+
     QMenu *menu = new QMenu("Chat", this);
     menu->addAction("Pas d'actions définies !");
 
@@ -43,17 +47,7 @@ FenPrincipale::~FenPrincipale()
     delete ui;
 }
 
-void FenPrincipale::on_pseudo_returnPressed()
-{
-    on_connecter_clicked();
-}
-
-void FenPrincipale::on_password_returnPressed()
-{
-    on_connecter_clicked();
-}
-
-void FenPrincipale::on_connecter_clicked()
+void FenPrincipale::seConnecter()
 {
     m_socket->abort(); // On désactive les connexions précédentes s'il y en a
 
@@ -68,7 +62,7 @@ void FenPrincipale::on_connecter_clicked()
 }
 
 // Envoi d'un message au serveur
-void FenPrincipale::on_envoyer_clicked()
+void FenPrincipale::envoyerMessage()
 {
     QString msg = ui->message->text();
     handleChatCommands(msg);
@@ -82,12 +76,6 @@ void FenPrincipale::on_envoyer_clicked()
 
     ui->message->clear(); // On vide la zone d'écriture du message
     ui->message->setFocus(); // Et on remet le curseur à l'intérieur
-}
-
-void FenPrincipale::on_message_returnPressed()
-{
-    // Appuyer sur la touche Entrée a le même effet que cliquer sur le bouton "Envoyer"
-    on_envoyer_clicked();
 }
 
 // On a reçu un paquet (ou un sous-paquet)

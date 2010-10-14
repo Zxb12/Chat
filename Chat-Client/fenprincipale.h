@@ -31,9 +31,11 @@ public:
 
 public slots:
     void donneesRecues();
+    void erreurSocket(QAbstractSocket::SocketError erreur);
+    void seConnecter();
     void connecte();
     void deconnecte();
-    void erreurSocket(QAbstractSocket::SocketError erreur);
+    void envoyerMessage();
     void premierPlan();
 
 protected:
@@ -74,14 +76,6 @@ private:
 
     bool m_quitOnDisconnect;
     QString m_html;
-
-private slots:
-    void on_pseudo_returnPressed();
-    void on_password_returnPressed();
-    void on_connecter_clicked();
-    void on_envoyer_clicked();
-    void on_message_returnPressed();
-
 };
 
 #endif // FENPRINCIPALE_H
