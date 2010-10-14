@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="ressources.qrc">
+   <iconset>
     <normaloff>:/icones/24</normaloff>:/icones/24</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -295,6 +295,7 @@ p, li { white-space: pre-wrap; }
      <addaction name="actionModificationDeNiveau"/>
     </widget>
     <addaction name="menuGestion"/>
+    <addaction name="actionRenommer"/>
     <addaction name="actionMessageDeDeconnexion"/>
    </widget>
    <addaction name="menuFichier"/>
@@ -365,9 +366,15 @@ p, li { white-space: pre-wrap; }
     <string>Se déconnecter du serveur</string>
    </property>
   </action>
+  <action name="actionRenommer">
+   <property name="text">
+    <string>Renommer</string>
+   </property>
+   <property name="statusTip">
+    <string>Changer son pseudo</string>
+   </property>
+  </action>
  </widget>
- <resources>
-  <include location="ressources.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

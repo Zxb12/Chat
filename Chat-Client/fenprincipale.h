@@ -45,6 +45,7 @@ public slots:
     void ui_register();
     void ui_modLevel();
     void ui_logoutMessage();
+    void ui_renommer();
 
 protected:
     void closeEvent(QCloseEvent *);

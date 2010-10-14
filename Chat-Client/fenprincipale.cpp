@@ -27,6 +27,7 @@ m_quitOnDisconnect(false), m_html("")
     connect(ui->actionEnregistrement, SIGNAL(triggered()),          this, SLOT(ui_register()));
     connect(ui->actionModificationDeNiveau, SIGNAL(triggered()),    this, SLOT(ui_modLevel()));
     connect(ui->actionMessageDeDeconnexion, SIGNAL(triggered()),    this, SLOT(ui_logoutMessage()));
+    connect(ui->actionRenommer, SIGNAL(triggered()),                this, SLOT(ui_renommer()));
     connect(ui->actionQuitter, SIGNAL(triggered()),                 qApp, SLOT(quit()));
 
     QMenu *menu = new QMenu("Chat", this);
@@ -1010,4 +1011,17 @@ void FenPrincipale::ui_logoutMessage()
         out << CMSG_SET_LOGOUT_MSG << message;
         out >> m_socket;
     }
+}
+
+void FenPrincipale::ui_renommer()
+{
+    QString pseudo;
+
+    pseudo = QInputDialog::getText(this, "OokChat", "Entrez votre nouveau pseudo").trimmed();
+    if (pseudo.isEmpty())
+        return;
+
+    Paquet out;
+    out << CMSG_SET_NICK << pseudo;
+    out >> m_socket;
 }
