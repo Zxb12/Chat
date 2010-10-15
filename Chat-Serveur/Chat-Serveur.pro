@@ -20,3 +20,4 @@ FORMS += fenprincipale.ui
 
 MOC_DIR += tmp/moc/
 OBJECTS_DIR += tmp/obj/
+DESTDIR += bin/
