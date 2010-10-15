@@ -17,6 +17,7 @@
 
 #include "../shared/paquet.h"
 #include "opcode.h"
+#include "fenban.h"
 
 namespace Ui
 {

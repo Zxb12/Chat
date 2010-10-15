@@ -928,21 +928,20 @@ void FenPrincipale::ui_kick()
     out >> m_socket;
 }
 
-//TODO: Ajouter une gestion de la date d'expiration.
 void FenPrincipale::ui_ban()
 {
     QString quiBannir, raison;
-    quiBannir = QInputDialog::getText(this, "OokChat", "Qui voulez-vous bannir ?").trimmed();
+    quint32 duree = 0;
+    bool ok = false;
+    FenBan f(this, &quiBannir, &duree, &raison, &ok);
+    f.exec();
 
-    //Si on n'a personne à kicker, on quitte
-    if (quiBannir.isEmpty())
-        return;
-
-    raison = QInputDialog::getText(this, "OokChat", "Pour quelle raison ?").trimmed();
-
-    Paquet out;
-    out << CMSG_BAN << quiBannir <<  quint32(0) << raison;
-    out >> m_socket;
+    if (ok)
+    {
+        Paquet out;
+        out << CMSG_BAN << quiBannir << duree << raison;
+        out >> m_socket;
+    }
 }
 
 void FenPrincipale::ui_register()
