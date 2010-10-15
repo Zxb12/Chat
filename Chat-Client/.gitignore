@@ -1,5 +1,4 @@
-debug/
-release/
+bin/
 tmp/
 Chat.pro.user
 Makefile*
