@@ -19,6 +19,7 @@ m_quitOnDisconnect(false), m_html("")
     connect(ui->pseudo, SIGNAL(returnPressed()),                    this, SLOT(seConnecter()));
     connect(ui->password, SIGNAL(returnPressed()),                  this, SLOT(seConnecter()));
     connect(ui->message, SIGNAL(returnPressed()),                   this, SLOT(envoyerMessage()));
+    connect(ui->envoyer, SIGNAL(clicked()),                         this, SLOT(envoyerMessage()));
 
     connect(ui->actionConnecter, SIGNAL(triggered()),               this, SLOT(seConnecter()));
     connect(ui->actionDeconnexion, SIGNAL(triggered()),             this, SLOT(seDeconnecter()));
