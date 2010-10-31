@@ -16,6 +16,9 @@
 #include "opcode.h"
 #include "../shared/paquet.h"
 #include "client.h"
+#include "channel.h"
+
+class Channel;
 
 namespace Ui
 {
@@ -29,9 +32,10 @@ public:
     FenPrincipale(QWidget *parent = 0);
     ~FenPrincipale();
 
+    bool connecterBDD();
     bool chargerFichier();
+    void chargerChannels();
     void envoyerATous(Paquet&);
-    void connecterBDD();
 
     //Handlers des opCodes reçus.
     void handleServerSide(Paquet*, Client*);
@@ -71,6 +75,7 @@ private:
 
     QTcpServer *m_serveur;
     QList<Client *> m_clients;
+    QList<Channel *> m_channels;
 
     //Configuration
     QString m_SQLAdresse, m_SQLDatabase, m_SQLLogin, m_SQLPassword;

@@ -16,12 +16,15 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
     //Préparation de l'UI
     this->setWindowTitle("OokChatServer - " + VERSION);
 
+    //Préparation du serveur
     if (!chargerFichier())
         CONSOLE("ERREUR: Impossible d'ouvrir le fichier de configuration server.conf");
+    if (connecterBDD())
+        chargerChannels();
 
-    m_serveur = new QTcpServer(this);
 
     //Démarrage du serveur
+    m_serveur = new QTcpServer(this);
     if (!m_serveur->listen(QHostAddress::Any, m_serverPort))
     {
         //Erreur de démarrage
@@ -33,7 +36,26 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
         ui->etatServeur->setText("Serveur démarré sur le port : <strong>" + QString::number(m_serveur->serverPort()) + "</strong>");
         connect(m_serveur, SIGNAL(newConnection()), this, SLOT(nouvelleConnexion()));
     }
-    connecterBDD();
+}
+
+bool FenPrincipale::connecterBDD()
+{
+
+    //Ouverture de la BDD
+    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+    db.setHostName(m_SQLAdresse);
+    db.setDatabaseName(m_SQLDatabase);
+    bool ok = db.open(m_SQLLogin, m_SQLPassword);
+    if (ok)
+    {
+        CONSOLE("Connexion réussie à la BDD");
+        return true;
+    }
+    else
+    {
+        CONSOLE("Connexion échouée à la BDD: " + db.lastError().text());
+        return false;
+    }
 }
 
 bool FenPrincipale::chargerFichier()
@@ -73,22 +95,22 @@ bool FenPrincipale::chargerFichier()
         return false;
 }
 
-void FenPrincipale::connecterBDD()
+void FenPrincipale::chargerChannels()
 {
-
-    //Ouverture de la BDD
-    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
-    db.setHostName(m_SQLAdresse);
-    db.setDatabaseName(m_SQLDatabase);
-    bool ok = db.open(m_SQLLogin, m_SQLPassword);
-    if (ok)
+    QSqlQuery query;
+    query.exec("SELECT * FROM channel WHERE `default` = 1");
+    if (query.next())
     {
-        CONSOLE("Connexion réussie à la BDD");
+        m_channels.append(new Channel(query.value(1).toString(), query.value(3).toUInt(), query.value(2).toString(), true, this));
     }
     else
+        CONSOLE("ERREUR: Channel: Aucun channel par défaut spécifié.");
+
+    query.clear();
+    query.exec("SELECT * FROM channel WHERE `default` <> 1");
+    while (query.next())
     {
-        CONSOLE("Connexion échouée à la BDD: " + db.lastError().text());
-        return;
+        m_channels.append(new Channel(query.value(1).toString(), query.value(3).toUInt(), query.value(2).toString(), false, this));
     }
 }
 
@@ -271,7 +293,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     QSqlQuery query;
     query.prepare("SELECT * FROM ban_ip WHERE ip = :ip");
     query.bindValue(":ip", client->getSocket()->peerAddress().toString());
-    if (!query.exec())
+    if (!query.exec())  //On n'autorise pas le login en cas de problème avec la BDD
     {
         CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
         Paquet out;

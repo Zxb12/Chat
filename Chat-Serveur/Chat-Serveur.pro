@@ -10,14 +10,15 @@ SOURCES += main.cpp \
     fenprincipale.cpp \
     client.cpp \
     opcode.cpp \
-    ../shared/paquet.cpp
+    ../shared/paquet.cpp \
+    channel.cpp
 HEADERS += fenprincipale.h \
     client.h \
     ../shared/shared.h \
     opcode.h \
-    ../shared/paquet.h
+    ../shared/paquet.h \
+    channel.h
 FORMS += fenprincipale.ui
-
 MOC_DIR += tmp/moc/
 OBJECTS_DIR += tmp/obj/
 DESTDIR += bin/
