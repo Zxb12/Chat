@@ -15,35 +15,38 @@ m_quitOnDisconnect(false), m_html("")
     ui->statusbar->addWidget(new QLabel("Prêt"));
     chargeConfig();
 
-    connect(ui->connecter, SIGNAL(clicked()),                       this, SLOT(seConnecter()));
-    connect(ui->pseudo, SIGNAL(returnPressed()),                    this, SLOT(seConnecter()));
-    connect(ui->password, SIGNAL(returnPressed()),                  this, SLOT(seConnecter()));
-    connect(ui->message, SIGNAL(returnPressed()),                   this, SLOT(envoyerMessage()));
-    connect(ui->envoyer, SIGNAL(clicked()),                         this, SLOT(envoyerMessage()));
+    connect(ui->connecter, SIGNAL(clicked()),                               this, SLOT(seConnecter()));
+    connect(ui->pseudo, SIGNAL(returnPressed()),                            this, SLOT(seConnecter()));
+    connect(ui->password, SIGNAL(returnPressed()),                          this, SLOT(seConnecter()));
+    connect(ui->message, SIGNAL(returnPressed()),                           this, SLOT(envoyerMessage()));
+    connect(ui->envoyer, SIGNAL(clicked()),                                 this, SLOT(envoyerMessage()));
+    connect(ui->listeChannels, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(changerChannel(QListWidgetItem*)));
+    connect(ui->listeChannels, SIGNAL(itemEntered(QListWidgetItem*)),       this, SLOT(changerChannel(QListWidgetItem*)));
 
-    connect(ui->actionConnecter, SIGNAL(triggered()),               this, SLOT(seConnecter()));
-    connect(ui->actionDeconnexion, SIGNAL(triggered()),             this, SLOT(seDeconnecter()));
-    connect(ui->actionKick, SIGNAL(triggered()),                    this, SLOT(ui_kick()));
-    connect(ui->actionBan, SIGNAL(triggered()),                     this, SLOT(ui_ban()));
-    connect(ui->actionEnregistrement, SIGNAL(triggered()),          this, SLOT(ui_register()));
-    connect(ui->actionModificationDeNiveau, SIGNAL(triggered()),    this, SLOT(ui_modLevel()));
-    connect(ui->actionMessageDeDeconnexion, SIGNAL(triggered()),    this, SLOT(ui_logoutMessage()));
-    connect(ui->actionRenommer, SIGNAL(triggered()),                this, SLOT(ui_renommer()));
-    connect(ui->actionQuitter, SIGNAL(triggered()),                 qApp, SLOT(quit()));
+    //Menu
+    connect(ui->actionConnecter, SIGNAL(triggered()),                       this, SLOT(seConnecter()));
+    connect(ui->actionDeconnexion, SIGNAL(triggered()),                     this, SLOT(seDeconnecter()));
+    connect(ui->actionKick, SIGNAL(triggered()),                            this, SLOT(ui_kick()));
+    connect(ui->actionBan, SIGNAL(triggered()),                             this, SLOT(ui_ban()));
+    connect(ui->actionEnregistrement, SIGNAL(triggered()),                  this, SLOT(ui_register()));
+    connect(ui->actionModificationDeNiveau, SIGNAL(triggered()),            this, SLOT(ui_modLevel()));
+    connect(ui->actionMessageDeDeconnexion, SIGNAL(triggered()),            this, SLOT(ui_logoutMessage()));
+    connect(ui->actionRenommer, SIGNAL(triggered()),                        this, SLOT(ui_renommer()));
+    connect(ui->actionQuitter, SIGNAL(triggered()),                         qApp, SLOT(quit()));
 
     QMenu *menu = new QMenu("Chat", this);
     menu->addAction("Pas d'actions définies !");
 
     m_sysTray = new QSystemTrayIcon(QIcon(":/icones/32"), this);
-    connect(m_sysTray, SIGNAL(messageClicked()), this, SLOT(premierPlan()));
+    connect(m_sysTray, SIGNAL(messageClicked()),                            this, SLOT(premierPlan()));
     m_sysTray->setContextMenu(menu);
     m_sysTray->show();
 
     m_socket = new QTcpSocket(this);
-    connect(m_socket, SIGNAL(readyRead()), this, SLOT(donneesRecues()));
-    connect(m_socket, SIGNAL(connected()), this, SLOT(connecte()));
-    connect(m_socket, SIGNAL(disconnected()), this, SLOT(deconnecte()));
-    connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(erreurSocket(QAbstractSocket::SocketError)));
+    connect(m_socket, SIGNAL(readyRead()),                                  this, SLOT(donneesRecues()));
+    connect(m_socket, SIGNAL(connected()),                                  this, SLOT(connecte()));
+    connect(m_socket, SIGNAL(disconnected()),                               this, SLOT(deconnecte()));
+    connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)),          this, SLOT(erreurSocket(QAbstractSocket::SocketError)));
 
     ui->chat->setEnabled(false);
     ui->message->setEnabled(false);
@@ -54,6 +57,7 @@ m_quitOnDisconnect(false), m_html("")
     ui->actionEnregistrement->setEnabled(false);
     ui->actionModificationDeNiveau->setEnabled(false);
     ui->listeConnectes->setEnabled(false);
+    ui->listeChannels->setEnabled(false);
 
     ui->chat->setHtml(m_html);
 }
@@ -172,6 +176,24 @@ void FenPrincipale::afficheBulle(QString titre, QString msg, QSystemTrayIcon::Me
         m_sysTray->showMessage("OokChat - " + titre, msg, icone, duree);
 }
 
+void FenPrincipale::changerChannel(QListWidgetItem *item)
+{
+    //Recherche du channel
+    Channel channel = m_channels[ui->listeChannels->row(item)];
+    quint32 id = channel.id;
+    QString password = "";
+    if (channel.protege)
+    {
+        password = QInputDialog::getText(this, "OokChat", "Mot de passe du canal", QLineEdit::Password);
+        if (password.isEmpty())
+            return;
+    }
+
+    Paquet out;
+    out << CMSG_CHANNEL_JOIN << id << password;
+    out >> m_socket;
+}
+
 void FenPrincipale::closeEvent(QCloseEvent */*event*/)
 {
     //Ouverture du fichier.
@@ -267,7 +289,8 @@ void FenPrincipale::deconnecte()
     ui->actionModificationDeNiveau->setEnabled(false);
     ui->listeConnectes->setEnabled(false);
     ui->listeConnectes->clear();
-
+    ui->listeChannels->setEnabled(false);
+    ui->listeChannels->clear();
     if (m_quitOnDisconnect)
         qApp->quit();
 
@@ -409,6 +432,7 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
             ui->actionEnregistrement->setEnabled(true);
             ui->actionModificationDeNiveau->setEnabled(true);
             ui->listeConnectes->setEnabled(true);
+            ui->listeChannels->setEnabled(true);
 
             //On sélectionne la zone de message.
             ui->message->setFocus();
@@ -417,6 +441,10 @@ void FenPrincipale::handleAuth(Paquet *in, quint16 opCode)
 
             Paquet out;
             out << CMSG_UPDATE_CLIENTS_LIST;
+            out >> m_socket;
+
+            out.clear();
+            out << CMSG_UPDATE_CHANNEL;
             out >> m_socket;
 
             out.clear();
@@ -538,6 +566,34 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             appendChat("<em> " + Qt::escape(pseudo) + " a été voicé par " + Qt::escape(voicePar) + ".</em>");
             break;
         }
+    case SMSG_CHANNEL_JOIN:
+        {
+            QString pseudo, channel;
+            QByteArray hash;
+            quint8 level;
+            *in >> pseudo >> hash >> level >> channel;
+
+            //Mise à jour de la liste des connectés
+            ui->listeConnectes->addItem(pseudo);
+
+            appendChat("<em> " + Qt::escape(pseudo) + " (" + hash + ", " + QString::number(level) + ") a rejoint le canal " + channel + ".</em>");
+            break;
+        }
+    case SMSG_CHANNEL_LEAVE:
+        {
+            QString pseudo, channel;
+            QByteArray hash;
+            quint8 level;
+            *in >> pseudo >> hash >> level >> channel;
+
+            //Recherche le pseudo, prend sa ligne et le supprime.
+            delete ui->listeConnectes->takeItem(
+                    ui->listeConnectes->row(
+                            ui->listeConnectes->findItems(pseudo, Qt::MatchExactly).first()));
+
+            appendChat("<em> " + Qt::escape(pseudo) + " (" + hash + ", " + QString::number(level) + ") a quitté le canal " + channel + ".</em>");
+            break;
+        }
     default:
         CONSOLE("ERREUR: Paquet non géré dans handleUserModification");
         break;
@@ -654,6 +710,12 @@ void FenPrincipale::handleError(Paquet */*in*/, quint16 opCode)
     case SMSG_NO_INTERACT_HIGHER_LEVEL:
         appendChat(ERREUR, "Impossible d'interagir avec un compte de niveau spérieur ou égal au vôtre.");
         break;
+    case SMSG_CHANNEL_WRONG_PASSWORD:
+        appendChat(ERREUR, "Mot de passe du canal incorrect.");
+        break;
+    case SMSG_CHANNEL_LVL_TOO_LOW:
+        appendChat(ERREUR, "Votre niveau est trop bas pour rejoindre ce canal.");
+        break;
     default:
         CONSOLE("ERREUR: Paquet non géré dans handleError");
         break;
@@ -692,6 +754,24 @@ void FenPrincipale::handleClientsList(Paquet *in, quint16 /*opCode*/)
     }
 
     ui->listeConnectes->addItems(pseudos);
+}
+
+void FenPrincipale::handleChannel(Paquet *in, quint16 /*opCode*/)
+{
+    ui->listeChannels->clear();
+    m_channels.clear();
+
+    quint32 size;
+    Channel channel;
+    *in >> size;
+    for (quint32 i = 0; i < size; i++)
+    {
+        *in >> channel.id;
+        *in >> channel.nom;
+        *in >> channel.protege;
+        ui->listeChannels->addItem(channel.nom);
+        m_channels.append(channel);
+    }
 }
 
 void FenPrincipale::handleChatCommands(QString &msg)

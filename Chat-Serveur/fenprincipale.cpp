@@ -101,7 +101,8 @@ void FenPrincipale::chargerChannels()
     query.exec("SELECT * FROM channel WHERE `default` = 1");
     if (query.next())
     {
-        m_channels.append(new Channel(query.value(1).toString(), query.value(3).toUInt(), query.value(2).toString(), true, this));
+        m_channels.append(new Channel(query.value(0).toUInt(), query.value(1).toString(),
+                                      query.value(3).toUInt(), query.value(2).toString(), true, this));
     }
     else
         CONSOLE("ERREUR: Channel: Aucun channel par défaut spécifié.");
@@ -110,7 +111,8 @@ void FenPrincipale::chargerChannels()
     query.exec("SELECT * FROM channel WHERE `default` <> 1");
     while (query.next())
     {
-        m_channels.append(new Channel(query.value(1).toString(), query.value(3).toUInt(), query.value(2).toString(), false, this));
+        m_channels.append(new Channel(query.value(0).toUInt(), query.value(1).toString(),
+                                      query.value(3).toUInt(), query.value(2).toString(), false, this));
     }
 }
 
@@ -155,7 +157,8 @@ void FenPrincipale::decoClient()
         Paquet out;
         out << SMSG_USER_LEFT;
         out << client->getPseudo() << client->getLogoutMessage() << client->getHashIP(), client->getLoginLevel();
-        envoyerATous(out);
+        envoyerAuChannel(out, client->getChannel());
+        client->getChannel()->removeUser(client);
     }
 
     //On le supprime de la liste de clients
@@ -235,10 +238,19 @@ void FenPrincipale::paquetRecu(Paquet *in)
     delete in;
 }
 
-void FenPrincipale::envoyerATous(Paquet &paquet)
+void FenPrincipale::envoyerAuServeur(Paquet &paquet)
 {
     //Envoi du paquet à tous les clients.
     foreach(Client *client, m_clients)
+    {
+        paquet >> client->getSocket();
+    }
+}
+
+void FenPrincipale::envoyerAuChannel(Paquet &paquet, Channel *channel)
+{
+    //Envoi du paquet à tous les clients.
+    foreach(Client *client, channel->getClients())
     {
         paquet >> client->getSocket();
     }
@@ -450,6 +462,16 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     client->setIdCompte(id);
     client->setSessionState(AUTHED);
 
+    //Recherche du channel par défaut.
+    foreach (Channel *i_channel, m_channels)
+    {
+        if (i_channel->isDefault())
+        {
+            i_channel->addUser(client);
+            break;
+        }
+    }
+
     Paquet out;
     out << SMSG_AUTH_OK;
     out << pseudo;
@@ -458,7 +480,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     out.clear();
     out << SMSG_USER_JOINED;
     out << pseudo << client->getHashIP() << loginLevel;
-    envoyerATous(out);
+    envoyerAuChannel(out, client->getChannel());
 
     return;
 
@@ -515,7 +537,7 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
     Paquet out;
     out << SMSG_USER_RENAMED;
     out << ancienPseudo << pseudo;
-    envoyerATous(out);
+    envoyerAuChannel(out, client->getChannel());
 
     return;
 
@@ -554,7 +576,7 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
     out << SMSG_CHAT_MESSAGE;
     out << pseudo << message;
 
-    envoyerATous(out);
+    envoyerAuChannel(out, client->getChannel());
 
     //Archivage dans la BDD
     QSqlQuery query;
@@ -712,7 +734,7 @@ void FenPrincipale::handleKick(Paquet *in, Client *client)
     out << client->getPseudo(); //On dit qui a kické.
     out << clientAKicker->getPseudo(); //On prend le pseudo réel (majuscules...)
     out << raison;
-    envoyerATous(out);
+    envoyerAuChannel(out, client->getChannel());
 
     //On kicke le client.
     kickClient(clientAKicker);
@@ -800,7 +822,7 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
     out << client->getPseudo(); //On dit qui a banni.
     out << clientABannir->getPseudo(); //On prend le pseudo réel (majuscules...)
     out << raison;
-    envoyerATous(out);
+    envoyerAuChannel(out, client->getChannel());
 
     //On kick le client.
     kickClient(clientABannir);
@@ -964,7 +986,7 @@ void FenPrincipale::handleUpdateClientsList(Paquet */*in*/, Client *client)
     QStringList pseudos;
     quint32 size = 0;
 
-    foreach (Client* i_client, m_clients)
+    foreach (Client* i_client, client->getChannel()->getClients())
     {
         size++;
         pseudos << i_client->getPseudo();
@@ -994,4 +1016,82 @@ void FenPrincipale::handleSetLogoutMsg(Paquet *in, Client *client)
     *in >> msg;
 
     client->setLogoutMessage(msg);
+}
+
+void FenPrincipale::handleUpdateChannel(Paquet */*in*/, Client *client)
+{
+    //OpCode - size - channels
+    quint32 size = m_channels.size();
+
+    Paquet out;
+    out << SMSG_CHANNEL << size;
+
+    for (quint32 i = 0; i < size; i++)
+    {
+        out << m_channels[i]->getId();
+        out << m_channels[i]->getTitre();
+        out << !m_channels[i]->getPassword().isEmpty();
+    }
+
+    out >> client->getSocket();
+
+}
+
+void FenPrincipale::handleChannelJoin(Paquet *in, Client *client)
+{
+    quint32 id;
+    QString password;
+    *in >> id >> password;
+
+    Channel *channel = 0;
+    foreach(Channel *i_channel, m_channels)
+    {
+        if (i_channel->getId() == id)
+        {
+            channel = i_channel;
+            break;
+        }
+    }
+
+    if (!channel)
+    {
+        CONSOLE("ERREUR: Channel non trouvé pour le client " + client->getPseudo());
+        return;
+    }
+
+    //Si on va dans notre channel actuel, il ne se passe rien
+    if (channel->getId() == client->getChannel()->getId())
+        return;
+
+    //Vérifie le niveau
+    if (client->getLoginLevel() < channel->getReqLevel())
+    {
+        Paquet out;
+        out << SMSG_CHANNEL_LVL_TOO_LOW;
+        out >> client->getSocket();
+        return;
+    }
+
+    //Vérifie le mot de passe
+    if (channel->getPassword() != password)
+    {
+        Paquet out;
+        out << SMSG_CHANNEL_WRONG_PASSWORD;
+        out >> client->getSocket();
+        return;
+    }
+
+    //Notification
+    Paquet out;
+    out << SMSG_CHANNEL_LEAVE << client->getPseudo() << client->getHashIP() << client->getLoginLevel() << client->getChannel()->getTitre();
+    envoyerAuChannel(out, client->getChannel());
+    client->getChannel()->removeUser(client);
+
+    channel->addUser(client);
+    out.clear();
+    out << SMSG_CHANNEL_JOIN << client->getPseudo() << client->getHashIP() << client->getLoginLevel() << channel->getTitre();
+    envoyerAuChannel(out, channel);
+
+    //Mise à jour de la liste de connectés
+    handleUpdateClientsList(0, client);
 }

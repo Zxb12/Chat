@@ -18,6 +18,12 @@ Paquet::Paquet(const Paquet &paquet) : m_paquet(paquet.m_paquet), m_stream(&m_pa
 
 
 
+Paquet& Paquet::operator<<(const bool &val)
+{
+    m_stream << val;
+    return *this;
+}
+
 Paquet& Paquet::operator<<(const quint8 &val)
 {
     m_stream << val;
@@ -61,6 +67,12 @@ Paquet& Paquet::operator<<(const QByteArray &val)
 }
 
 
+
+Paquet& Paquet::operator>>(bool &val)
+{
+    m_stream >> val;
+    return *this;
+}
 
 Paquet& Paquet::operator>>(quint8 &val)
 {

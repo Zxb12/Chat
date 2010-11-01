@@ -54,5 +54,12 @@ OpCodeHandler OpCodeTable[NB_OPCODES] =
     {"SMSG_CLIENTS_LIST",                   NEVER,       &FenPrincipale::handleServerSide},
     {"CMSG_LOGOUT",                         AUTHED,      &FenPrincipale::handleLogout},
     {"CMSG_SET_LOGOUT_MSG",                 AUTHED,      &FenPrincipale::handleSetLogoutMsg},
+    {"CMSG_UPDATE_CHANNEL",                 AUTHED,      &FenPrincipale::handleUpdateChannel},
+    {"SMSG_CHANNEL",                        NEVER,       &FenPrincipale::handleServerSide},
+    {"CMSG_CHANNEL_JOIN",                   AUTHED,      &FenPrincipale::handleChannelJoin},
+    {"SMSG_CHANNEL_JOIN",                   NEVER,       &FenPrincipale::handleServerSide},
+    {"SMSG_CHANNEL_LEAVE",                  NEVER,       &FenPrincipale::handleServerSide},
+    {"SMSG_CHANNEL_WRONG_PASSWORD",         NEVER,       &FenPrincipale::handleServerSide},
+    {"SMSG_CHANNEL_LVL_TOO_LOW",            NEVER,       &FenPrincipale::handleServerSide},
 };
 

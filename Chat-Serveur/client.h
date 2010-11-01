@@ -13,6 +13,7 @@
 #include "../shared/paquet.h"
 
 class FenPrincipale;
+class Channel;
 
 class Client : public QObject
 {
@@ -36,6 +37,8 @@ public:
     void setLogoutMessage(QString msg) { m_logoutMessage = msg; }
     int getSessionState() { return m_sessionState; }
     void setSessionState(int state) { m_sessionState = state; }
+    Channel* getChannel() { return m_channel; }
+    void setChannel(Channel *channel) { m_channel = channel; }
 
     quint8 getPingsPending() { return m_pingsPending; }
     void setPingsPending(quint8 pings) { m_pingsPending = pings; }
@@ -65,6 +68,7 @@ private:
     QByteArray m_hashIP;
     QString m_logoutMessage;
     int m_sessionState;
+    Channel *m_channel;
 
     quint8 m_pingsPending;
     QTimer *m_pingTimer;

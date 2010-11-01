@@ -14,10 +14,18 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QListWidgetItem>
 
 #include "../shared/paquet.h"
 #include "opcode.h"
 #include "fenban.h"
+
+struct Channel
+{
+    QString nom;
+    quint32 id;
+    bool protege;
+};
 
 namespace Ui
 {
@@ -40,6 +48,7 @@ public slots:
     void deconnecte();
     void envoyerMessage();
     void premierPlan();
+    void changerChannel(QListWidgetItem*);
 
     void ui_kick();
     void ui_ban();
@@ -69,6 +78,7 @@ public:
     void handleError(Paquet*, quint16);
     void handleWhoIs(Paquet*, quint16);
     void handleClientsList(Paquet*, quint16);
+    void handleChannel(Paquet*, quint16);
     void handleChatCommands(QString&);
 
 private:
@@ -83,6 +93,8 @@ private:
     QString m_pseudo;
     QString m_acctName;
     QString m_logoutMessage;
+
+    QList<Channel> m_channels;
 
     bool m_quitOnDisconnect;
     QString m_html;

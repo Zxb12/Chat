@@ -3,7 +3,7 @@
 #define CONSOLE(a) emit console(a)
 
 Client::Client(QTcpSocket *socket, FenPrincipale *parent) : m_parent(parent), m_socket(socket), m_taillePaquet(0), m_pseudo(""), m_account(""), m_loginLevel(0),
-                                    m_idCompte(0), m_logoutMessage(""), m_sessionState(NOT_CHECKED), m_pingsPending(0), m_ping(0)
+                                    m_idCompte(0), m_logoutMessage(""), m_sessionState(NOT_CHECKED), m_channel(0), m_pingsPending(0), m_ping(0)
 
 {
     connect(m_socket, SIGNAL(readyRead()), this, SLOT(donneesRecues()));
@@ -82,7 +82,7 @@ void Client::sendPing()
         out << QString("le serveur");    //Par qui on a été kické
         out << m_pseudo;                 //Qui a été kické
         out << QString("ping timeout");  //Raison
-        m_parent->envoyerATous(out);
+        m_parent->envoyerAuServeur(out);
 
         //Déconnexion.
         m_socket->abort();

@@ -35,7 +35,8 @@ public:
     bool connecterBDD();
     bool chargerFichier();
     void chargerChannels();
-    void envoyerATous(Paquet&);
+    void envoyerAuServeur(Paquet&);
+    void envoyerAuChannel(Paquet&, Channel*);
 
     //Handlers des opCodes reçus.
     void handleServerSide(Paquet*, Client*);
@@ -53,6 +54,8 @@ public:
     void handleUpdateClientsList(Paquet*, Client*);
     void handleLogout(Paquet*, Client*);
     void handleSetLogoutMsg(Paquet*, Client*);
+    void handleUpdateChannel(Paquet*, Client*);
+    void handleChannelJoin(Paquet*, Client*);
 
 
 public slots:

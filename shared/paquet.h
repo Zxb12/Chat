@@ -13,6 +13,7 @@ public:
     Paquet(const Paquet&);
 
     //Manipulation
+    Paquet& operator<<(const bool&);
     Paquet& operator<<(const quint8&);
     Paquet& operator<<(const quint16&);
     Paquet& operator<<(const quint32&);
@@ -21,6 +22,7 @@ public:
     Paquet& operator<<(const OpCodeValues&);
     Paquet& operator<<(const QByteArray&);
 
+    Paquet& operator>>(bool&);
     Paquet& operator>>(quint8&);
     Paquet& operator>>(quint16&);
     Paquet& operator>>(quint32&);
@@ -29,8 +31,6 @@ public:
     Paquet& operator>>(QByteArray&);
 
     bool operator>>(QTcpSocket*);
-
-
 
     //Envoie le paquet préparé à la socket.
     //Doit calculer la taille du paquet avant.
