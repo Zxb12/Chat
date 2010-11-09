@@ -32,7 +32,7 @@ m_quitOnDisconnect(false), m_html("")
     connect(ui->actionModificationDeNiveau, SIGNAL(triggered()),            this, SLOT(ui_modLevel()));
     connect(ui->actionMessageDeDeconnexion, SIGNAL(triggered()),            this, SLOT(ui_logoutMessage()));
     connect(ui->actionRenommer, SIGNAL(triggered()),                        this, SLOT(ui_renommer()));
-    connect(ui->actionQuitter, SIGNAL(triggered()),                         qApp, SLOT(quit()));
+    connect(ui->actionQuitter, SIGNAL(triggered()),                         this, SLOT(close()));
 
     QMenu *menu = new QMenu("Chat", this);
     menu->addAction("Pas d'actions définies !");
@@ -292,7 +292,7 @@ void FenPrincipale::deconnecte()
     ui->listeChannels->setEnabled(false);
     ui->listeChannels->clear();
     if (m_quitOnDisconnect)
-        qApp->quit();
+        close();
 
     afficheBulle("Déconnexion", "Vous avez été déconnecté du serveur.");
 }
