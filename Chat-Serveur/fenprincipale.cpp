@@ -580,9 +580,10 @@ void FenPrincipale::handleChatMessage(Paquet *in, Client *client)
 
     //Archivage dans la BDD
     QSqlQuery query;
-    query.prepare("INSERT INTO chat_history (name, message, date) "
-                  "VALUES (:name, :message, :date)");
+    query.prepare("INSERT INTO chat_history (name, channel, message, date) "
+                  "VALUES (:name, :channel, :message, :date)");
     query.bindValue(":name", pseudo);
+    query.bindValue(":channel", client->getChannel()->getTitre());
     query.bindValue(":message", message);
     query.bindValue(":date", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss:zzz"));
     query.exec();
