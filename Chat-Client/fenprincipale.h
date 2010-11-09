@@ -2,7 +2,7 @@
 #define FENPRINCIPALE_H
 
 #define TAILLE_MDP_MIN  5
-#define VERSION         QString("Chat-0.0.6a")
+#define VERSION         QString("Chat-0.0.6b")
 #define VERSION_CONFIG  quint32(2010101102)  //YYYYMMDD + Numéro de la version du jour
 
 #include <QMainWindow>
