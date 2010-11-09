@@ -519,7 +519,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
                     ui->listeConnectes->row(
                             ui->listeConnectes->findItems(pseudo, Qt::MatchExactly).first()));
 
-            appendChat("&lt--", "<em>" + Qt::escape(pseudo) + " (" + hash + ", " + QString::number(level) + ") a quitté le Chat : " + Qt::escape(raison) + "</em>");
+            appendChat("&lt;--", "<em>" + Qt::escape(pseudo) + " (" + hash + ", " + QString::number(level) + ") a quitté le Chat : " + Qt::escape(raison) + "</em>");
             afficheBulle("Déconnexion", pseudo + " a quitté le Chat.");
             break;
         }
@@ -547,7 +547,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             QString pseudo, kickPar, raison;
             *in >> kickPar >> pseudo >> raison;
 
-            appendChat("&lt--", "<em> " + Qt::escape(pseudo) + " a été kické par " + Qt::escape(kickPar) + ". Raison: " + Qt::escape(raison) + "</em>");
+            appendChat("&lt;--", "<em> " + Qt::escape(pseudo) + " a été kické par " + Qt::escape(kickPar) + ". Raison: " + Qt::escape(raison) + "</em>");
             break;
         }
     case SMSG_USER_BANNED:
@@ -555,7 +555,7 @@ void FenPrincipale::handleUserModification(Paquet *in, quint16 opCode)
             QString pseudo, banPar, raison;
             *in >> banPar >> pseudo >> raison;
 
-            appendChat("&lt--", "<em> " + Qt::escape(pseudo) + " a été banni par " + Qt::escape(banPar) + ". Raison: " + Qt::escape(raison) + "</em>");
+            appendChat("&lt;--", "<em> " + Qt::escape(pseudo) + " a été banni par " + Qt::escape(banPar) + ". Raison: " + Qt::escape(raison) + "</em>");
             break;
         }
     case SMSG_USER_VOICED:
