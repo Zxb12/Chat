@@ -1,7 +1,7 @@
 #ifndef FENPRINCIPALE_H
 #define FENPRINCIPALE_H
 
-#define VERSION         QString("Chat-0.0.5a")
+#define VERSION         QString("Chat-0.0.6a")
 #define VERSION_CONFIG  quint32(2010101401)  //YYYYMMDD + Numéro de la version du jour
 
 #include <QWidget>
