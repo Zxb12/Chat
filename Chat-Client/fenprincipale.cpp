@@ -954,6 +954,45 @@ void FenPrincipale::handleChatCommands(QString &msg)
         out << CMSG_WHOIS << args[1];
         out >> m_socket;
     }
+    else if (args[0] == "/join")
+    {
+        if (args.size() < 2)
+        {
+            appendChat(ERREUR, "Syntaxe de la commande incorrecte");
+            msg.clear();
+            return;
+        }
+
+        //Extraction du nom du canal
+        QString channel, pass;
+        for (int i = 1; i < args.size(); i++)
+            channel += args[i] + " ";
+        channel = channel.trimmed();
+
+        //Recherche de l'ID
+        quint32 id = 0;
+        foreach (Channel i_channel, m_channels)
+        {
+            if (i_channel.nom.compare(channel, Qt::CaseInsensitive) == 0)
+            {
+                id = i_channel.id;
+                if (i_channel.protege)
+                    pass = QInputDialog::getText(this, "OokChat", "Mot de passe du canal");
+                break;
+            }
+        }
+
+        if (!id)
+        {
+            appendChat(ERREUR, "Canal non trouvé");
+            msg.clear();
+            return;
+        }
+
+        Paquet out;
+        out << CMSG_CHANNEL_JOIN << id << pass;
+        out >> m_socket;
+    }
     else if (args[0] == "/quit")
     {
         QString quitMessage;
