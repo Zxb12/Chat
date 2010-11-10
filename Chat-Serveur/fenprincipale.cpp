@@ -1,5 +1,4 @@
 #include "fenprincipale.h"
-#include "ui_fenprincipale.h"
 
 using namespace std;
 
@@ -154,7 +153,8 @@ void FenPrincipale::console(QString txt)
     cout << tmpBufOem << endl;
     delete[] tmpBufOem;
 #else
-    qDebug() << QTime::currentTime().toString() + " " + txt;
+    //qDebug doit prendre un char*, sinon il affiche des guillemets \"
+    qDebug() << (QTime::currentTime().toString() + " " + txt).toAscii().data() << endl;
 #endif
 }
 
