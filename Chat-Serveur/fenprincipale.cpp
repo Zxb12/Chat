@@ -152,6 +152,7 @@ void FenPrincipale::console(QString txt)
     char* tmpBufOem = new char[txt.size()+1];
     CharToOemA(txt.toAscii().data(), tmpBufOem);
     cout << tmpBufOem << endl;
+    delete[] tmpBufOem;
 #else
     qDebug() << QTime::currentTime().toString() + " " + txt;
 #endif
