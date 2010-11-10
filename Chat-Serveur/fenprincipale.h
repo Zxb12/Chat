@@ -4,7 +4,9 @@
 #define VERSION         QString("Chat-0.0.6b")
 #define VERSION_CONFIG  quint32(2010101401)  //YYYYMMDD + Numéro de la version du jour
 
-#include <QWidget>
+#include <iostream>
+
+#include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTime>
@@ -25,11 +27,11 @@ namespace Ui
     class FenPrincipale;
 }
 
-class FenPrincipale : public QWidget
+class FenPrincipale : public QObject
 {
     Q_OBJECT
 public:
-    FenPrincipale(QWidget *parent = 0);
+    FenPrincipale(QObject *parent = 0);
     ~FenPrincipale();
 
     bool connecterBDD();
@@ -74,8 +76,6 @@ public:
 
 
 private:
-    Ui::FenPrincipale *ui;
-
     QTcpServer *m_serveur;
     QList<Client *> m_clients;
     QList<Channel *> m_channels;

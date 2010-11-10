@@ -1,7 +1,5 @@
 #include "client.h"
 
-#define CONSOLE(a) emit console(a)
-
 Client::Client(QTcpSocket *socket, FenPrincipale *parent) : m_parent(parent), m_socket(socket), m_taillePaquet(0), m_pseudo(""), m_account(""), m_loginLevel(0),
 m_idCompte(0), m_logoutMessage(""), m_sessionState(NOT_CHECKED), m_channel(0), m_pingsPending(0), m_ping(0)
 
@@ -74,7 +72,7 @@ void Client::sendPing()
 
     if (m_pingsPending > m_parent->getMaxPingsPending())
     {
-        CONSOLE(m_pseudo + " a été kické pour ping timeout.");
+        console(m_pseudo + " a été kické pour ping timeout.");
 
         //On avertit les connectés.
         if (!m_pseudo.isEmpty())

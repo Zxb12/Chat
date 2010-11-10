@@ -1,10 +1,10 @@
-#include <QtGui/QApplication>
+#include <QtCore/QCoreApplication>
 #include "fenprincipale.h"
+#include <iostream>
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    FenPrincipale w;
-    w.show();
+    QCoreApplication a(argc, argv);
+    FenPrincipale server;
     return a.exec();
 }

@@ -1,26 +1,44 @@
 #include "fenprincipale.h"
 #include "ui_fenprincipale.h"
 
+using namespace std;
+
 #if defined ( WIN32 ) || defined ( WIN64 )
 #define ENDL "\r\n"
+#include <windows.h>
 #else
 #define ENDL "\n"
 #endif
 
-#define CONSOLE(a)  ui->console->append(QTime::currentTime().toString() + " " + a)
+#define console(a) console(a)
 
-FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenPrincipale)
+FenPrincipale::FenPrincipale(QObject *parent) : QObject(parent)
 {
-    ui->setupUi(this);
+#if defined ( WIN32 ) || defined ( WIN64 )
+    system(QString("TITLE OokChat Server " + VERSION).toStdString().c_str());
+#endif
+    QCoreApplication::instance()->setApplicationName("OokChat Server");
+    QCoreApplication::instance()->setApplicationVersion(VERSION);
 
-    //Préparation de l'UI
-    this->setWindowTitle("OokChatServer - " + VERSION);
+    console("                                                      ");
+    console("------------------------------------------------------");
+    console("-                                                    -");
+    console("-                   OokChat Server                   -");
+    console("-                    "+VERSION+"                     -");
+    console("-                                                    -");
+    console("-                 Created by Frugebul                -");
+    console("-                                                    -");
+    console("------------------------------------------------------");
+    console("                                                      ");
+    console("Lancement du serveur...");
 
     //Préparation du serveur
     if (!chargerFichier())
-        CONSOLE("ERREUR: Impossible d'ouvrir le fichier de configuration server.conf");
+        return;
     if (connecterBDD())
         chargerChannels();
+    else
+        return;
 
 
     //Démarrage du serveur
@@ -28,32 +46,33 @@ FenPrincipale::FenPrincipale(QWidget *parent) : QWidget(parent), ui(new Ui::FenP
     if (!m_serveur->listen(QHostAddress::Any, m_serverPort))
     {
         //Erreur de démarrage
-        ui->etatServeur->setText("Le serveur n'a pas pu démarrer : " + m_serveur->errorString());
+        console("Le serveur n'a pas pu démarrer: " + m_serveur->errorString());
     }
     else
     {
         //Serveur démarré
-        ui->etatServeur->setText("Serveur démarré sur le port : <strong>" + QString::number(m_serveur->serverPort()) + "</strong>");
         connect(m_serveur, SIGNAL(newConnection()), this, SLOT(nouvelleConnexion()));
+        console("Serveur démarré sur le port: " + QString::number(m_serveur->serverPort()));
     }
 }
 
 bool FenPrincipale::connecterBDD()
 {
-
     //Ouverture de la BDD
+    console("Connexion à la base de données... " + m_SQLAdresse + " " + m_SQLDatabase);
     QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
     db.setHostName(m_SQLAdresse);
     db.setDatabaseName(m_SQLDatabase);
     bool ok = db.open(m_SQLLogin, m_SQLPassword);
     if (ok)
     {
-        CONSOLE("Connexion réussie à la BDD");
+        console("Connexion à la base de données réussie !");
         return true;
     }
     else
     {
-        CONSOLE("Connexion échouée à la BDD: " + db.lastError().text());
+        console("Connexion à la base de données échouée");
+        console("Raison: " + db.lastError().text());
         return false;
     }
 }
@@ -61,12 +80,13 @@ bool FenPrincipale::connecterBDD()
 bool FenPrincipale::chargerFichier()
 {
     QFile confFile("server.conf");
+    console("Chargement du fichier de configuration... " + confFile.fileName());
     if (confFile.open(QIODevice::ReadOnly))
     {
         //Vérification de la version du fichier.
         if (VERSION_CONFIG != QString(confFile.readLine()).remove("CONFIG_VERSION=").remove(ENDL).toInt())
         {
-            CONSOLE("ERREUR: Le fichier de configuration n'est pas à la bonne version.");
+            console("ERREUR: Le fichier de configuration n'est pas à la bonne version.");
             return false;
         }
 
@@ -89,10 +109,14 @@ bool FenPrincipale::chargerFichier()
         m_promoteLevel =            QString(confFile.readLine()).remove("PROMOTE_LVL=").remove(ENDL).toInt();
         m_whoisLevel =              QString(confFile.readLine()).remove("WHOIS_LVL=").remove(ENDL).toInt();
 
+        console("Chargement du fichier de configuration réussi.");
         return true;
     }
     else
+    {
+        console("ERREUR: Le fichier de configuration n'a pas pu être ouvert.");
         return false;
+    }
 }
 
 void FenPrincipale::chargerChannels()
@@ -105,7 +129,7 @@ void FenPrincipale::chargerChannels()
                                       query.value(3).toUInt(), query.value(2).toString(), true, this));
     }
     else
-        CONSOLE("ERREUR: Channel: Aucun channel par défaut spécifié.");
+        console("ERREUR: Channel: Aucun channel par défaut spécifié.");
 
     query.clear();
     query.exec("SELECT * FROM channel WHERE `default` <> 1");
@@ -119,12 +143,18 @@ void FenPrincipale::chargerChannels()
 FenPrincipale::~FenPrincipale()
 {
     delete m_serveur;
-    delete ui;
 }
 
 void FenPrincipale::console(QString txt)
 {
-    CONSOLE(txt);
+#if defined ( WIN32 ) || defined ( WIN64 )
+    txt = QTime::currentTime().toString() + " " + txt;
+    char* tmpBufOem = new char[txt.size()+1];
+    CharToOemA(txt.toAscii().data(), tmpBufOem);
+    cout << tmpBufOem << endl;
+#else
+    qDebug() << QTime::currentTime().toString() + " " + txt;
+#endif
 }
 
 void FenPrincipale::nouvelleConnexion()
@@ -137,7 +167,7 @@ void FenPrincipale::nouvelleConnexion()
 
     //On ajoute le client à la liste
     m_clients << nouveauClient;
-    CONSOLE("Nouveau client, IP : " + nouveauClient->getSocket()->peerAddress().toString());
+    console("Nouveau client, IP : " + nouveauClient->getSocket()->peerAddress().toString());
 }
 
 void FenPrincipale::decoClient()
@@ -149,7 +179,7 @@ void FenPrincipale::decoClient()
     if (!client)
         return;
 
-    CONSOLE("Un client s'est déconnecté.");
+    console("Un client s'est déconnecté.");
 
     //On envoie le message de déconnexion à tous si la personne a un pseudo.
     if (!client->getPseudo().isEmpty())
@@ -170,7 +200,7 @@ void FenPrincipale::decoClient()
 
 void FenPrincipale::kickClient(Client *client)
 {
-    CONSOLE("Le client " + client->getSocket()->peerAddress().toString() + " a été kické.");
+    console("Le client " + client->getSocket()->peerAddress().toString() + " a été kické.");
     Paquet out;
     out << SMSG_KICK;
     out >> client->getSocket();
@@ -192,7 +222,7 @@ void FenPrincipale::paquetRecu(Paquet *in)
 
     if (opCode > NB_OPCODES)
     {
-        CONSOLE("ERREUR: Un client a envoyé un opCode non géré(" + QString::number(opCode) + "). Kick du client.");
+        console("ERREUR: Un client a envoyé un opCode non géré(" + QString::number(opCode) + "). Kick du client.");
 
         //On vide le paquet.
         in->clear();
@@ -206,7 +236,7 @@ void FenPrincipale::paquetRecu(Paquet *in)
 
     OpCodeHandler handler = OpCodeTable[opCode];
 
-    CONSOLE("Paquet reçu: " + handler.nom + "(" + QString::number(opCode) + ")");
+    console("Paquet reçu: " + QString(handler.nom) + "(" + QString::number(opCode) + ")");
 
     //On vérifie que le client a le droit d'envoyer ce paquet.
     switch (handler.state)
@@ -229,7 +259,7 @@ void FenPrincipale::paquetRecu(Paquet *in)
             (this->*handler.f)(in, client);
         break;
     case NEVER:
-        CONSOLE("Le paquet reçu n'est pas géré.");
+        console("Le paquet reçu n'est pas géré.");
         kickClient(client);
         break;
     }
@@ -264,7 +294,7 @@ void FenPrincipale::handleHello(Paquet* in, Client* client)
     //On vérifie la version.
     if (clientVersion != VERSION)
     {
-        CONSOLE("Le client " + client->getSocket()->peerAddress().toString() +
+        console("Le client " + client->getSocket()->peerAddress().toString() +
                 " a essayé de se connecter avec un client à la mauvaise version (" + clientVersion + ").");
         Paquet out;
         out << SMSG_AUTH_INCORRECT_VERSION;
@@ -284,7 +314,7 @@ void FenPrincipale::handleHello(Paquet* in, Client* client)
 
 void FenPrincipale::handleServerSide(Paquet* /*in*/, Client* /*client*/)
 {
-    CONSOLE("Paquet reçu avec un opCode de serveur.");
+    console("Paquet reçu avec un opCode de serveur.");
 }
 
 void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
@@ -307,7 +337,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     query.bindValue(":ip", client->getSocket()->peerAddress().toString());
     if (!query.exec())  //On n'autorise pas le login en cas de problème avec la BDD
     {
-        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        console("ERREUR SQL: " + query.lastError().databaseText());
         Paquet out;
         out << SMSG_AUTH_ERROR;
         out >> client->getSocket();
@@ -325,7 +355,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
             query.prepare("DELETE FROM ban_ip WHERE ip = :ip");
             query.bindValue(":ip", client->getSocket()->peerAddress().toString());
             if (!query.exec())
-                CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+                console("ERREUR SQL: " + query.lastError().databaseText());
         }
         else
         {
@@ -351,7 +381,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
         query.bindValue(":pwhash", pwhash);
         if (!query.exec())
         {
-            CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+            console("ERREUR SQL: " + query.lastError().databaseText());
             Paquet out;
             out << SMSG_AUTH_ERROR;
             out >> client->getSocket();
@@ -362,7 +392,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
         if (!query.next())
         {
             //On n'a trouvé aucun enregistrement: compte ou mdp incorrect !
-            CONSOLE("Un client a essayé de se connecter avec un mauvais login/mdp.");
+            console("Un client a essayé de se connecter avec un mauvais login/mdp.");
             Paquet out;
             out << SMSG_AUTH_INCORRECT_LOGIN;
             out >> client->getSocket();
@@ -379,7 +409,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
         query.prepare("SELECT * FROM ban_account WHERE account_id = :id");
         query.bindValue(":id", id);
         if (!query.exec())
-            CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+            console("ERREUR SQL: " + query.lastError().databaseText());
         if (query.next())
         {
             //On a trouvé un enregistrement de ban
@@ -390,7 +420,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
                 query.prepare("DELETE FROM ban_account WHERE account_id = :id");
                 query.bindValue(":id", id);
                 if (!query.exec())
-                    CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+                    console("ERREUR SQL: " + query.lastError().databaseText());
             }
             else
             {
@@ -413,7 +443,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
         {
             if (i_client->getAccount() == login)
             {
-                CONSOLE("Un client a essayé de se connecter avec un compte déjà utilisé.");
+                console("Un client a essayé de se connecter avec un compte déjà utilisé.");
                 Paquet out;
                 out << SMSG_AUTH_ACCT_ALREADY_IN_USE;
                 out >> client->getSocket();
@@ -432,7 +462,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     //Vérifie la taille du pseudo
     if (pseudo.size() < m_nickMinLength)
     {
-        CONSOLE("ERREUR: Nommage impossible, pseudo trop court.");
+        console("ERREUR: Nommage impossible, pseudo trop court.");
         Paquet out;
         out << SMSG_NICK_TOO_SHORT;
         out >> client->getSocket();
@@ -445,7 +475,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     {
         if (i_client->getPseudo().compare(pseudo, Qt::CaseInsensitive) == 0)
         {
-            CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
+            console("ERREUR: Nommage impossible, nom déjà utilisé.");
             Paquet out;
             out << SMSG_NICK_ALREADY_IN_USE;
             out >> client->getSocket();
@@ -455,7 +485,7 @@ void FenPrincipale::handleAuthLogin(Paquet* in, Client* client)
     }
 
     //Client authentifié.
-    CONSOLE("Client authentifié : " + pseudo);
+    console("Client authentifié : " + pseudo);
     client->setPseudo(pseudo);
     client->setAccount(login);
     client->setLoginLevel(loginLevel);
@@ -498,7 +528,7 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
     //Vérifie la taille du pseudo
     if (pseudo.size() < m_nickMinLength)
     {
-        CONSOLE("ERREUR: Nommage impossible, pseudo trop court.");
+        console("ERREUR: Nommage impossible, pseudo trop court.");
         Paquet out;
         out << SMSG_NICK_TOO_SHORT;
         out >> client->getSocket();
@@ -506,7 +536,7 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
     }
     if (pseudo.size() > m_nickMaxLength)
     {
-        CONSOLE("ERREUR: Nommage impossible, pseudo trop long.");
+        console("ERREUR: Nommage impossible, pseudo trop long.");
         Paquet out;
         out << SMSG_NICK_TOO_LONG;
         out >> client->getSocket();
@@ -522,7 +552,7 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
             if (i_client == client && i_client->getPseudo() != pseudo)
                 continue;
 
-            CONSOLE("ERREUR: Nommage impossible, nom déjà utilisé.");
+            console("ERREUR: Nommage impossible, nom déjà utilisé.");
             Paquet out;
             out << SMSG_NICK_ALREADY_IN_USE;
             out >> client->getSocket();
@@ -531,7 +561,7 @@ void FenPrincipale::handleSetNick(Paquet *in, Client *client)
     }
 
     //Renommage du client
-    CONSOLE("Client nommé: " + pseudo);
+    console("Client nommé: " + pseudo);
     client->setPseudo(pseudo);
 
     Paquet out;
@@ -602,7 +632,10 @@ void FenPrincipale::handlePing(Paquet *in, Client *client)
     time = time.addMSecs(diff);
 
     diff = time.msecsTo(QTime::currentTime());
-    CONSOLE(client->getPseudo() + ": ping " + QString::number(diff) + " ms");
+    if (client->getPseudo().isEmpty())
+        console(client->getSocket()->peerAddress().toString() + ": ping " + QString::number(diff) + " ms");
+    else
+        console(client->getPseudo() + ": ping " + QString::number(diff) + " ms");
 
     client->setPing(diff);
 }
@@ -643,7 +676,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
     if (!query.exec())
     {
         //Erreur de requête.
-        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        console("ERREUR SQL: " + query.lastError().databaseText());
         Paquet out;
         out << SMSG_REG_ERROR;
         out >> client->getSocket();
@@ -666,7 +699,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
     if (!query.exec())
     {
         //Erreur de requête.
-        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        console("ERREUR SQL: " + query.lastError().databaseText());
         Paquet out;
         out << SMSG_REG_ERROR;
         out >> client->getSocket();
@@ -675,7 +708,7 @@ void FenPrincipale::handleRegister(Paquet *in, Client *client)
 
 
 
-    CONSOLE("Nouveau compte enregistré: " + login);
+    console("Nouveau compte enregistré: " + login);
     Paquet out;
     out << SMSG_REG_OK << login;
     out >> client->getSocket();
@@ -803,7 +836,7 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
         query.bindValue(":bannedby", client->getPseudo());
         query.bindValue(":reason", raison);
         if (!query.exec())
-            CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+            console("ERREUR SQL: " + query.lastError().databaseText());
     }
 
     //Ainsi que le ban IP.
@@ -815,7 +848,7 @@ void FenPrincipale::handleBan(Paquet *in, Client *client)
     query.bindValue(":bannedby", client->getPseudo());
     query.bindValue(":reason", raison);
     if (!query.exec())
-        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        console("ERREUR SQL: " + query.lastError().databaseText());
 
     //On annonce le ban
     Paquet out;
@@ -878,7 +911,7 @@ void FenPrincipale::handleLevelMod(Paquet *in, Client *client)
     query.bindValue(":login", login);
     if (!query.exec())
     {
-        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        console("ERREUR SQL: " + query.lastError().databaseText());
         Paquet out;
         out << SMSG_PROMOTE_ERROR;
         out >> client->getSocket();
@@ -916,7 +949,7 @@ void FenPrincipale::handleLevelMod(Paquet *in, Client *client)
     query.bindValue(":level", level);
     query.bindValue(":login", login);
     if (!query.exec())
-        CONSOLE("ERREUR SQL: " + query.lastError().databaseText());
+        console("ERREUR SQL: " + query.lastError().databaseText());
 
     //Modification du niveau d'administration.
     Paquet out;
@@ -1056,7 +1089,7 @@ void FenPrincipale::handleChannelJoin(Paquet *in, Client *client)
 
     if (!channel)
     {
-        CONSOLE("ERREUR: Channel non trouvé pour le client " + client->getPseudo());
+        console("ERREUR: Channel non trouvé pour le client " + client->getPseudo());
         return;
     }
 
