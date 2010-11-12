@@ -91,23 +91,27 @@ bool FenPrincipale::chargerFichier()
         }
 
         //Chargement depuis le fichier.
-        m_serverPort =              QString(confFile.readLine()).remove("SERVER_PORT=").remove(ENDL).toInt();
-        m_SQLAdresse =              QString(confFile.readLine()).remove("SQL_ADDRESS=").remove(ENDL);
-        m_SQLDatabase =             QString(confFile.readLine()).remove("SQL_DATABASE=").remove(ENDL);
-        m_SQLLogin =                QString(confFile.readLine()).remove("SQL_LOGIN=").remove(ENDL);
-        m_SQLPassword =             QString(confFile.readLine()).remove("SQL_PASSWORD=").remove(ENDL);
-        m_pingInterval =            QString(confFile.readLine()).remove("PING_INTERVAL=").remove(ENDL).toInt();
-        m_maxPingsPending =         QString(confFile.readLine()).remove("MAX_PINGS_PENDING=").remove(ENDL).toInt();
-        m_nickMinLength =           QString(confFile.readLine()).remove("NICK_MIN_LENGTH=").remove(ENDL).toInt();
-        m_nickMaxLength =           QString(confFile.readLine()).remove("NICK_MAX_LENGTH=").remove(ENDL).toInt();
-        m_accountNameMinLength =    QString(confFile.readLine()).remove("ACCOUNT_NAME_MIN_LENGTH=").remove(ENDL).toInt();
-        m_levelMax =                QString(confFile.readLine()).remove("LVL_MAX=").remove(ENDL).toInt();
-        m_registerLevel =           QString(confFile.readLine()).remove("REGISTER_LVL=").remove(ENDL).toInt();
-        m_kickLevel =               QString(confFile.readLine()).remove("KICK_LVL=").remove(ENDL).toInt();
-        m_banLevel =                QString(confFile.readLine()).remove("BAN_LVL=").remove(ENDL).toInt();
-        m_voiceLevel =              QString(confFile.readLine()).remove("VOICE_LVL=").remove(ENDL).toInt();
-        m_promoteLevel =            QString(confFile.readLine()).remove("PROMOTE_LVL=").remove(ENDL).toInt();
-        m_whoisLevel =              QString(confFile.readLine()).remove("WHOIS_LVL=").remove(ENDL).toInt();
+        m_serverPort =                      QString(confFile.readLine()).remove("SERVER_PORT=").remove(ENDL).toInt();
+        m_SQLAdresse =                      QString(confFile.readLine()).remove("SQL_ADDRESS=").remove(ENDL);
+        m_SQLDatabase =                     QString(confFile.readLine()).remove("SQL_DATABASE=").remove(ENDL);
+        m_SQLLogin =                        QString(confFile.readLine()).remove("SQL_LOGIN=").remove(ENDL);
+        m_SQLPassword =                     QString(confFile.readLine()).remove("SQL_PASSWORD=").remove(ENDL);
+        m_pingInterval =                    QString(confFile.readLine()).remove("PING_INTERVAL=").remove(ENDL).toInt();
+        m_maxPingsPending =                 QString(confFile.readLine()).remove("MAX_PINGS_PENDING=").remove(ENDL).toInt();
+        m_nickMinLength =                   QString(confFile.readLine()).remove("NICK_MIN_LENGTH=").remove(ENDL).toInt();
+        m_nickMaxLength =                   QString(confFile.readLine()).remove("NICK_MAX_LENGTH=").remove(ENDL).toInt();
+        m_accountNameMinLength =            QString(confFile.readLine()).remove("ACCOUNT_NAME_MIN_LENGTH=").remove(ENDL).toInt();
+        m_levelMax =                        QString(confFile.readLine()).remove("LVL_MAX=").remove(ENDL).toInt();
+        m_registerLevel =                   QString(confFile.readLine()).remove("REGISTER_LVL=").remove(ENDL).toInt();
+        m_kickLevel =                       QString(confFile.readLine()).remove("KICK_LVL=").remove(ENDL).toInt();
+        m_banLevel =                        QString(confFile.readLine()).remove("BAN_LVL=").remove(ENDL).toInt();
+        m_voiceLevel =                      QString(confFile.readLine()).remove("VOICE_LVL=").remove(ENDL).toInt();
+        m_promoteLevel =                    QString(confFile.readLine()).remove("PROMOTE_LVL=").remove(ENDL).toInt();
+        m_whoisLevel =                      QString(confFile.readLine()).remove("WHOIS_LVL=").remove(ENDL).toInt();
+        m_channelCreateLevel =              QString(confFile.readLine()).remove("CHANNEL_CREATE_LVL=").remove(ENDL).toInt();
+        m_channelCreatePersistantLevel =    QString(confFile.readLine()).remove("CHANNEL_CREATE_PERSISTANT_LVL=").remove(ENDL).toInt();
+        m_channelDeleteLevel =              QString(confFile.readLine()).remove("CHANNEL_DELETE_LVL=").remove(ENDL).toInt();
+        m_channelEditLevel =                QString(confFile.readLine()).remove("CHANNEL_EDIT_LVL=").remove(ENDL).toInt();
 
         console("Chargement du fichier de configuration réussi.");
         return true;
@@ -125,18 +129,26 @@ void FenPrincipale::chargerChannels()
     query.exec("SELECT * FROM channel WHERE `default` = 1");
     if (query.next())
     {
-        m_channels.append(new Channel(query.value(0).toUInt(), query.value(1).toString(),
-                                      query.value(3).toUInt(), query.value(2).toString(), true, this));
+        Channel* channel = new Channel(query.value(0).toUInt(), query.value(1).toString(),
+                                       query.value(3).toUInt(), query.value(2).toString(),
+                                       query.value(5).toString(), query.value(6).toUInt(),
+                                       true, this);
+        m_channels.append(channel);
+        connect (channel, SIGNAL(channelNeedsToBeRemoved(Channel*)), this, SLOT(supprimerChannel(Channel*)));
     }
     else
         console("ERREUR: Channel: Aucun channel par défaut spécifié.");
 
     query.clear();
-    query.exec("SELECT * FROM channel WHERE `default` <> 1");
+    query.exec("SELECT * FROM channel WHERE `default` <> 1 ORDER BY id");
     while (query.next())
     {
-        m_channels.append(new Channel(query.value(0).toUInt(), query.value(1).toString(),
-                                      query.value(3).toUInt(), query.value(2).toString(), false, this));
+        Channel* channel = new Channel(query.value(0).toUInt(), query.value(1).toString(),
+                                       query.value(3).toUInt(), query.value(2).toString(),
+                                       query.value(5).toString(), query.value(6).toUInt(),
+                                       false, this);
+        m_channels.append(channel);
+        connect (channel, SIGNAL(channelNeedsToBeRemoved(Channel*)), this, SLOT(supprimerChannel(Channel*)));
     }
 }
 
@@ -267,6 +279,25 @@ void FenPrincipale::paquetRecu(Paquet *in)
 
     //Libération de la mémoire.
     delete in;
+}
+
+void FenPrincipale::supprimerChannel(Channel *channel)
+{
+    m_channels.removeOne(channel);
+
+    //Suppression du channel dans la BDD
+    QSqlQuery query;
+    query.prepare("DELETE FROM channel WHERE id = :id");
+    query.bindValue(":id", channel->getId());
+    if (!query.exec())
+    {
+        console(query.lastError().text());
+    }
+    delete channel;
+
+    //Mise à jour de la liste des channels chez les clients.
+    foreach (Client* i_client, m_clients)
+        handleUpdateChannel(0, i_client);
 }
 
 void FenPrincipale::envoyerAuServeur(Paquet &paquet)
@@ -1129,4 +1160,14 @@ void FenPrincipale::handleChannelJoin(Paquet *in, Client *client)
 
     //Mise à jour de la liste de connectés
     handleUpdateClientsList(0, client);
+}
+
+void FenPrincipale::handleChannelCreate(Paquet *in, Client *client)
+{
+}
+void FenPrincipale::handleChannelDelete(Paquet *in, Client *client)
+{
+}
+void FenPrincipale::handleChannelEdit(Paquet *in, Client *client)
+{
 }

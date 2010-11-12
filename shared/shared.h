@@ -1,7 +1,7 @@
 #ifndef SHARED_H
 #define SHARED_H
 
-#define NB_OPCODES 0x3b
+#define NB_OPCODES 0x44
 
 enum OpCodeValues
 {
@@ -64,6 +64,15 @@ enum OpCodeValues
     SMSG_CHANNEL_LEAVE              = 0x38,
     SMSG_CHANNEL_WRONG_PASSWORD     = 0x39,
     SMSG_CHANNEL_LVL_TOO_LOW        = 0x3a,
+    CMSG_CHANNEL_CREATE             = 0x3b,
+    SMSG_CHANNEL_CREATED            = 0x3c,
+    SMSG_CHANNEL_UNABLE_TO_CREATE   = 0x3d,
+    CMSG_CHANNEL_DELETE             = 0x3e,
+    SMSG_CHANNEL_DELETED            = 0x3f,
+    SMSG_CHANNEL_UNABLE_TO_DELETE   = 0x40,
+    CMSG_CHANNEL_EDIT               = 0x41,
+    SMSG_CHANNEL_EDITED             = 0x42,
+    SMSG_CHANNEL_UNABLE_TO_EDIT     = 0x43,
 };
 
 #endif // SHARED_H

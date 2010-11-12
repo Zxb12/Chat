@@ -43,7 +43,10 @@ CREATE TABLE `channel` (
   `id` int(10) unsigned NOT NULL,
   `name` text NOT NULL,
   `password` text NOT NULL,
-  `join_level` smallint(6) NOT NULL COMMENT 'Minimum level required to join the channel',
+  `join_level` smallint(6) NOT NULL DEFAULT '0' COMMENT 'Minimum level required to join the channel',
+  `default` smallint(6) unsigned NOT NULL DEFAULT '0' COMMENT '1 = Default Channel, 0 = Normal Channel',
+  `created_by_acct` text NOT NULL,
+  `delete_when_empty` smallint(6) NOT NULL DEFAULT '0',
   KEY `id` (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

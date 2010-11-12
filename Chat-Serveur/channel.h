@@ -12,7 +12,7 @@ class Channel : public QObject
 {
 Q_OBJECT
 public:
-    Channel(quint32, QString, quint8, QString, bool = false, FenPrincipale* = 0);
+    Channel(quint32, QString, quint8, QString, QString, bool, bool = false, FenPrincipale* = 0);
     ~Channel();
 
     void addUser(Client*);
@@ -21,13 +21,20 @@ public:
     //Accesseurs
     quint32 getId() { return m_id; }
     QString getTitre() { return m_titre; }
+    void setTitre(QString titre) { m_titre = titre; }
     quint8 getReqLevel() { return m_reqLevel; }
+    void setReqLevel(quint8 reqLevel) { m_reqLevel = reqLevel; }
     QString getPassword() { return m_password; }
+    void setPassword(QString pass) { m_password = pass; }
+    QString getCreatedBy() { return m_createdBy; }
     QList<Client *> getClients() { return m_users; }
     bool isDefault() { return m_defaultChannel; }
+    bool deleteWhenEmpty() { return m_deleteWhenEmpty; }
+    void setDeleteWhenEmpty(bool deleteWhenEmpty) { m_deleteWhenEmpty = deleteWhenEmpty; }
 
 signals:
     void console(QString);
+    void channelNeedsToBeRemoved(Channel*);
 
 public slots:
 
@@ -37,6 +44,8 @@ protected:
     QString m_titre;
     quint8 m_reqLevel;
     QString m_password;
+    QString m_createdBy;
+    bool m_deleteWhenEmpty;
     bool m_defaultChannel;
 
     QList<Client *> m_users;

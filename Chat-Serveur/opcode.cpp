@@ -61,5 +61,14 @@ OpCodeHandler OpCodeTable[NB_OPCODES] =
     {"SMSG_CHANNEL_LEAVE",                  NEVER,       &FenPrincipale::handleServerSide},
     {"SMSG_CHANNEL_WRONG_PASSWORD",         NEVER,       &FenPrincipale::handleServerSide},
     {"SMSG_CHANNEL_LVL_TOO_LOW",            NEVER,       &FenPrincipale::handleServerSide},
+    {"CMSG_CHANNEL_CREATE",                 AUTHED,      &FenPrincipale::handleChannelCreate},
+    {"SMSG_CHANNEL_CREATED",                NEVER,       &FenPrincipale::handleServerSide},
+    {"SMSG_CHANNEL_UNABLE_TO_CREATE",       NEVER,       &FenPrincipale::handleServerSide},
+    {"CMSG_CHANNEL_DELETE",                 AUTHED,      &FenPrincipale::handleChannelDelete},
+    {"SMSG_CHANNEL_DELETED",                NEVER,       &FenPrincipale::handleServerSide},
+    {"SMSG_CHANNEL_UNABLE_TO_DELETE",       NEVER,       &FenPrincipale::handleServerSide},
+    {"CMSG_CHANNEL_EDIT",                   AUTHED,      &FenPrincipale::handleChannelEdit},
+    {"SMSG_CHANNEL_EDITED",                 NEVER,       &FenPrincipale::handleServerSide},
+    {"SMSG_CHANNEL_UNABLE_TO_EDIT",         NEVER,       &FenPrincipale::handleServerSide},
 };
 

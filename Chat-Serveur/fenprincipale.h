@@ -1,8 +1,8 @@
 #ifndef FENPRINCIPALE_H
 #define FENPRINCIPALE_H
 
-#define VERSION         QString("Chat-0.0.6b")
-#define VERSION_CONFIG  quint32(2010101401)  //YYYYMMDD + Numéro de la version du jour
+#define VERSION         QString("Chat-0.0.7a")
+#define VERSION_CONFIG  quint32(2010111201)  //YYYYMMDD + Numéro de la version du jour
 
 #include <iostream>
 
@@ -58,6 +58,9 @@ public:
     void handleSetLogoutMsg(Paquet*, Client*);
     void handleUpdateChannel(Paquet*, Client*);
     void handleChannelJoin(Paquet*, Client*);
+    void handleChannelCreate(Paquet*, Client*);
+    void handleChannelDelete(Paquet*, Client*);
+    void handleChannelEdit(Paquet*, Client*);
 
 
 public slots:
@@ -68,6 +71,7 @@ public slots:
     void kickClient(Client *);
 
     void paquetRecu(Paquet*);
+    void supprimerChannel(Channel*);
 
 public:
     //Accesseurs
@@ -84,9 +88,10 @@ private:
     QString m_SQLAdresse, m_SQLDatabase, m_SQLLogin, m_SQLPassword;
     quint16 m_serverPort;
     quint32 m_pingInterval;
-    quint16 m_maxPingsPending, m_nickMinLength, m_nickMaxLength, m_accountNameMinLength,
-            m_levelMax, m_registerLevel, m_kickLevel, m_banLevel, m_voiceLevel,
-            m_promoteLevel, m_whoisLevel;
+    quint16 m_maxPingsPending, m_nickMinLength, m_nickMaxLength, m_accountNameMinLength;
+    quint8  m_levelMax, m_registerLevel, m_kickLevel, m_banLevel, m_voiceLevel,
+            m_promoteLevel, m_whoisLevel, m_channelCreateLevel, m_channelCreatePersistantLevel,
+            m_channelDeleteLevel, m_channelEditLevel;
 };
 
 #endif // FENPRINCIPALE_H

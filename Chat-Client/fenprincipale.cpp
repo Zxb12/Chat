@@ -201,7 +201,7 @@ void FenPrincipale::closeEvent(QCloseEvent */*event*/)
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
         QMessageBox::warning(this, "Erreur de sauvegarde", "Impossible d'ouvrir le fichier de configuration.\n"
-                                                           "Les paramères ne peuvent pas être sauvegardés.");
+                             "Les paramères ne peuvent pas être sauvegardés.");
         return;
     }
 
@@ -220,7 +220,7 @@ void FenPrincipale::chargeConfig()
     if (!file.open(QIODevice::ReadOnly))
     {
         QMessageBox::warning(this, "Erreur de chargement", "Impossible d'ouvrir le fichier de configuration.\n"
-                                                           "Les paramères ne peuvent pas être chargés.");
+                             "Les paramères ne peuvent pas être chargés.");
         return;
     }
 
@@ -236,7 +236,7 @@ void FenPrincipale::chargeConfig()
     if (versionFichier != VERSION_CONFIG)
     {
         QMessageBox::warning(this, "Erreur de chargement", "Le fichier de configuration est à la mauvaise version.\n"
-                                                           "Les paramètes ne peuvent pas être chargés.");
+                             "Les paramètes ne peuvent pas être chargés.");
         return;
     }
 
@@ -716,6 +716,15 @@ void FenPrincipale::handleError(Paquet */*in*/, quint16 opCode)
     case SMSG_CHANNEL_LVL_TOO_LOW:
         appendChat(ERREUR, "Votre niveau est trop bas pour rejoindre ce canal.");
         break;
+    case SMSG_CHANNEL_UNABLE_TO_CREATE:
+        appendChat(ERREUR, "Impossible de créer le canal.");
+        break;
+    case SMSG_CHANNEL_UNABLE_TO_DELETE:
+        appendChat(ERREUR, "Impossible de supprimer ce canal.");
+        break;
+    case SMSG_CHANNEL_UNABLE_TO_EDIT:
+        appendChat(ERREUR, "Impossible d'éditer ce canal.");
+        break;
     default:
         CONSOLE("ERREUR: Paquet non géré dans handleError");
         break;
@@ -756,22 +765,42 @@ void FenPrincipale::handleClientsList(Paquet *in, quint16 /*opCode*/)
     ui->listeConnectes->addItems(pseudos);
 }
 
-void FenPrincipale::handleChannel(Paquet *in, quint16 /*opCode*/)
+void FenPrincipale::handleChannel(Paquet *in, quint16 opCode)
 {
-    ui->listeChannels->clear();
-    m_channels.clear();
-
-    quint32 size;
-    Channel channel;
-    *in >> size;
-    for (quint32 i = 0; i < size; i++)
+    switch (opCode)
     {
-        *in >> channel.id;
-        *in >> channel.nom;
-        *in >> channel.protege;
-        ui->listeChannels->addItem(channel.nom);
-        m_channels.append(channel);
+    case SMSG_CHANNEL:
+        {
+            ui->listeChannels->clear();
+            m_channels.clear();
+
+            quint32 size;
+            Channel channel;
+            *in >> size;
+            for (quint32 i = 0; i < size; i++)
+            {
+                *in >> channel.id;
+                *in >> channel.nom;
+                *in >> channel.protege;
+                ui->listeChannels->addItem(channel.nom);
+                m_channels.append(channel);
+            }
+            break;
+        }
+    case SMSG_CHANNEL_CREATED:
+        appendChat(SUCCES, "Canal créé.");
+        break;
+    case SMSG_CHANNEL_DELETED:
+        appendChat(SUCCES, "Canal supprimé.");
+        break;
+    case SMSG_CHANNEL_EDITED:
+        appendChat(SUCCES, "Canal édité");
+        break;
+    default:
+        CONSOLE("ERREUR: Paquet non géré dans handleChannel");
+        break;
     }
+
 }
 
 void FenPrincipale::handleChatCommands(QString &msg)
