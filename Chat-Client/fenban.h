@@ -13,17 +13,17 @@ class FenBan : public QDialog
 {
     Q_OBJECT
 public:
-    FenBan(QWidget *parent, QString*, quint32*, QString*, bool*);
+    FenBan(QWidget *parent, QString&, quint32&, QString&, bool&);
     ~FenBan();
 
 private:
     Ui::FenBan *ui;
     QTimer *timer;
 
-    QString *m_quiBannir;
-    quint32 *m_duree;
-    QString *m_raison;
-    bool *m_ok;
+    QString &m_quiBannir;
+    quint32 &m_duree;
+    QString &m_raison;
+    bool &m_ok;
 
 private slots:
     void updateDateTime();

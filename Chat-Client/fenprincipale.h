@@ -2,6 +2,7 @@
 #define FENPRINCIPALE_H
 
 #define TAILLE_MDP_MIN  5
+#define TAILLE_NOM_CHANNEL_MIN 3
 #define VERSION         QString("Chat-0.0.7a")
 #define VERSION_CONFIG  quint32(2010101102)  //YYYYMMDD + Numéro de la version du jour
 
@@ -19,6 +20,7 @@
 #include "../shared/paquet.h"
 #include "opcode.h"
 #include "fenban.h"
+#include "fenchannel.h"
 
 struct Channel
 {
@@ -56,6 +58,9 @@ public slots:
     void ui_modLevel();
     void ui_logoutMessage();
     void ui_renommer();
+    void ui_creerCanal();
+    void ui_supprimerCanal();
+    void ui_editerCanal();
 
 protected:
     void closeEvent(QCloseEvent *);

@@ -32,6 +32,9 @@ m_quitOnDisconnect(false), m_html("")
     connect(ui->actionModificationDeNiveau, SIGNAL(triggered()),            this, SLOT(ui_modLevel()));
     connect(ui->actionMessageDeDeconnexion, SIGNAL(triggered()),            this, SLOT(ui_logoutMessage()));
     connect(ui->actionRenommer, SIGNAL(triggered()),                        this, SLOT(ui_renommer()));
+    connect(ui->actionCreerCanal, SIGNAL(triggered()),                      this, SLOT(ui_creerCanal()));
+    connect(ui->actionSupprimerCanal, SIGNAL(triggered()),                  this, SLOT(ui_supprimerCanal()));
+    connect(ui->actionEditerCanal, SIGNAL(triggered()),                     this, SLOT(ui_editerCanal()));
     connect(ui->actionQuitter, SIGNAL(triggered()),                         this, SLOT(close()));
 
     QMenu *menu = new QMenu("Chat", this);
@@ -1082,7 +1085,7 @@ void FenPrincipale::ui_ban()
     QString quiBannir, raison;
     quint32 duree = 0;
     bool ok = false;
-    FenBan f(this, &quiBannir, &duree, &raison, &ok);
+    FenBan f(this, quiBannir, duree, raison, ok);
     f.exec();
 
     if (ok)
@@ -1175,4 +1178,57 @@ void FenPrincipale::ui_renommer()
     Paquet out;
     out << CMSG_SET_NICK << pseudo;
     out >> m_socket;
+}
+
+void FenPrincipale::ui_creerCanal()
+{
+    QString titre, password;
+    quint8 lvl = 0;
+    bool persistant = false, ok = false;
+    FenChannel fenetre(this, titre, password, lvl, persistant, ok);
+    fenetre.exec();
+
+    if (ok)
+    {
+        titre = titre.trimmed();
+        if (titre.size() < TAILLE_NOM_CHANNEL_MIN)
+        {
+            QMessageBox::warning(this, "OokChat", "Nom du canal trop court");
+            return;
+        }
+        if (password.size() != 0 && password.size() < TAILLE_MDP_MIN)
+        {
+            QMessageBox::warning(this, "OokChat", "Mot de passe du canal trop court");
+            return;
+        }
+
+        //Les données sont OK
+        Paquet out;
+        out << CMSG_CHANNEL_CREATE << titre << password << lvl << persistant;
+        out >> m_socket;
+    }
+}
+
+void FenPrincipale::ui_supprimerCanal()
+{
+    //Recherche du channel
+    int row = ui->listeChannels->currentRow();
+    if (row == -1)
+    {
+        QMessageBox::warning(this, "OokChat", "Veuillez sélectionner un canal");
+        return;
+    }
+    Channel channel = m_channels[row];
+    if (QMessageBox::question(this, "OokChat", "Voulez-vous vraiment supprimer le canal \"" + channel.nom + "\" ?",
+                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
+    {
+        Paquet out;
+        out << CMSG_CHANNEL_DELETE << channel.id;
+        out >> m_socket;
+    }
+
+}
+
+void FenPrincipale::ui_editerCanal()
+{
 }

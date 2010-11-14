@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="ressources.qrc">
+   <iconset>
     <normaloff>:/icones/24</normaloff>:/icones/24</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -322,7 +322,19 @@ p, li { white-space: pre-wrap; }
      <addaction name="actionEnregistrement"/>
      <addaction name="actionModificationDeNiveau"/>
     </widget>
+    <widget class="QMenu" name="menuCanal">
+     <property name="statusTip">
+      <string>Crée un nouveau canal</string>
+     </property>
+     <property name="title">
+      <string>Canal</string>
+     </property>
+     <addaction name="actionCreerCanal"/>
+     <addaction name="actionSupprimerCanal"/>
+     <addaction name="actionEditerCanal"/>
+    </widget>
     <addaction name="menuGestion"/>
+    <addaction name="menuCanal"/>
     <addaction name="actionRenommer"/>
     <addaction name="actionMessageDeDeconnexion"/>
    </widget>
@@ -402,9 +414,28 @@ p, li { white-space: pre-wrap; }
     <string>Changer son pseudo</string>
    </property>
   </action>
+  <action name="actionCreerCanal">
+   <property name="text">
+    <string>Créer</string>
+   </property>
+  </action>
+  <action name="actionSupprimerCanal">
+   <property name="text">
+    <string>Supprimer</string>
+   </property>
+   <property name="statusTip">
+    <string>Supprime le canal sélectionné</string>
+   </property>
+  </action>
+  <action name="actionEditerCanal">
+   <property name="text">
+    <string>Editer</string>
+   </property>
+   <property name="statusTip">
+    <string>Edite le canal sélectionné</string>
+   </property>
+  </action>
  </widget>
- <resources>
-  <include location="ressources.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

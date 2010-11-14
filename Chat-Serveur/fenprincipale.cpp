@@ -318,6 +318,22 @@ void FenPrincipale::envoyerAuChannel(Paquet &paquet, Channel *channel)
     }
 }
 
+void FenPrincipale::changerChannel(Client *client, Channel *channel)
+{
+    if (channel != client->getChannel())
+    {
+        Paquet out;
+        out << SMSG_CHANNEL_LEAVE << client->getPseudo() << client->getHashIP() << client->getLoginLevel() << client->getChannel()->getTitre();
+        envoyerAuChannel(out, client->getChannel());
+        client->getChannel()->removeUser(client);
+
+        channel->addUser(client);
+        out.clear();
+        out << SMSG_CHANNEL_JOIN << client->getPseudo() << client->getHashIP() << client->getLoginLevel() << channel->getTitre();
+        envoyerAuChannel(out, channel);
+    }
+}
+
 void FenPrincipale::handleHello(Paquet* in, Client* client)
 {
     QString clientVersion;
@@ -1148,15 +1164,7 @@ void FenPrincipale::handleChannelJoin(Paquet *in, Client *client)
     }
 
     //Notification
-    Paquet out;
-    out << SMSG_CHANNEL_LEAVE << client->getPseudo() << client->getHashIP() << client->getLoginLevel() << client->getChannel()->getTitre();
-    envoyerAuChannel(out, client->getChannel());
-    client->getChannel()->removeUser(client);
-
-    channel->addUser(client);
-    out.clear();
-    out << SMSG_CHANNEL_JOIN << client->getPseudo() << client->getHashIP() << client->getLoginLevel() << channel->getTitre();
-    envoyerAuChannel(out, channel);
+    changerChannel(client, channel);
 
     //Mise à jour de la liste de connectés
     handleUpdateClientsList(0, client);
@@ -1164,9 +1172,126 @@ void FenPrincipale::handleChannelJoin(Paquet *in, Client *client)
 
 void FenPrincipale::handleChannelCreate(Paquet *in, Client *client)
 {
+    QString titre, password;
+    quint8 reqLevel;
+    bool persistant;
+
+    *in >> titre >> password >> reqLevel >> persistant;
+
+    //Vérification des autorisations.
+    if (client->getLoginLevel() < m_channelCreateLevel)
+    {
+        Paquet out;
+        out << SMSG_NOT_AUTHORIZED;
+        out >> client->getSocket();
+        return;
+    }
+    if (persistant && client->getLoginLevel() < m_channelCreatePersistantLevel)
+    {
+        Paquet out;
+        out << SMSG_NOT_AUTHORIZED;
+        out >> client->getSocket();
+        return;
+    }
+
+    //Ajout de l'enregistrement dans la base de données.
+    QSqlQuery query;
+    query.prepare("INSERT INTO channel (name, password, join_level, created_by_acct, persistant) "
+                  "VALUES (:name, :password, :join_level, :created_by_acct, :persistant)");
+    query.bindValue(":name", titre);
+    query.bindValue(":password", password);
+    query.bindValue(":join_level", reqLevel);
+    query.bindValue(":created_by_acct", client->getAccount());
+    query.bindValue(":persistant", persistant);
+    if (!query.exec())
+    {
+        console("Impossible de créer le canal " + titre + ". Raison: " + query.lastError().text());
+        Paquet out;
+        out << SMSG_CHANNEL_UNABLE_TO_CREATE;
+        out >> client->getSocket();
+        return;
+    }
+
+    //Recherche de l'ID du channel.
+    query.prepare("SELECT id FROM channel ORDER BY id DESC LIMIT 1");
+    if (!query.exec())
+        console(query.lastError().text());
+    query.first();
+    quint32 id = query.value(0).toUInt();
+
+    //Création de l'objet canal.
+    Channel *channel = new Channel(id, titre, reqLevel, password, client->getAccount(), persistant, false, this);
+    connect(channel, SIGNAL(channelNeedsToBeRemoved(Channel*)), this, SLOT(supprimerChannel(Channel*)));
+    m_channels.append(channel);
+
+    //Mise à jour des clients.
+    foreach (Client* i_client, m_clients)
+        handleUpdateChannel(0, i_client);
+
+    //Le créateur du canal est automatiquement ajouté au canal
+    changerChannel(client, channel);
 }
 void FenPrincipale::handleChannelDelete(Paquet *in, Client *client)
 {
+    quint32 id = 0;
+    *in >> id;
+
+    if (client->getLoginLevel() < m_channelDeleteLevel)
+    {
+        Paquet out;
+        out << SMSG_NOT_AUTHORIZED;
+        out >> client->getSocket();
+        return;
+    }
+
+    Channel* channel = 0;
+    foreach(channel, m_channels)
+    {
+        if (channel->getId() == id)
+            break;
+    }
+
+    //Si on n'a pas trouvé notre canal ou si c'est le canal par défaut, on ne supprime rien
+    if (!channel || channel->isDefault())
+    {
+        Paquet out;
+        out << SMSG_CHANNEL_UNABLE_TO_DELETE;
+        out >> client->getSocket();
+        return;
+    }
+
+    //Suppression de la BDD
+    QSqlQuery query;
+    query.prepare("DELETE FROM channel WHERE id = :id");
+    query.bindValue(":id", id);
+    if (!query.exec())
+    {
+        console(query.lastError().text());
+        Paquet out;
+        out << SMSG_CHANNEL_UNABLE_TO_DELETE;
+        out >> client->getSocket();
+        return;
+    }
+
+    //Déplacement de tous les membres du canal vers le canal par défaut.
+    foreach(Channel* i_channel, m_channels)
+    {
+        if (i_channel->isDefault())
+        {
+            foreach(Client* i_client, channel->getClients())
+            {
+                changerChannel(i_client, i_channel);
+            }
+            break;
+        }
+    }
+
+    //Suppression du canal du serveur
+    m_channels.removeOne(channel);
+
+    //Mise à jour des clients;
+    foreach (Client* i_client, m_clients)
+        handleUpdateChannel(0, i_client);
 }
 void FenPrincipale::handleChannelEdit(Paquet *in, Client *client)
 {

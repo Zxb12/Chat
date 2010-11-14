@@ -1,7 +1,7 @@
 #include "fenban.h"
 #include "ui_fenban.h"
 
-FenBan::FenBan(QWidget *parent, QString* quiBannir, quint32* duree, QString* raison, bool *ok) :
+FenBan::FenBan(QWidget *parent, QString& quiBannir, quint32& duree, QString& raison, bool &ok) :
         QDialog(parent), ui(new Ui::FenBan), m_quiBannir(quiBannir), m_duree(duree), m_raison(raison), m_ok(ok)
 {
     ui->setupUi(this);
@@ -42,15 +42,15 @@ void FenBan::on_validation_accepted()
         duree = 0;
 
     //Attribution des valeurs
-    *m_quiBannir = quiBannir;
-    *m_raison = raison;
-    *m_duree = duree;
-    *m_ok = true;
+    m_quiBannir = quiBannir;
+    m_raison = raison;
+    m_duree = duree;
+    m_ok = true;
     this->close();
 }
 
 void FenBan::on_validation_rejected()
 {
-    *m_ok = false;
+    m_ok = false;
     this->close();
 }

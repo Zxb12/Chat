@@ -39,6 +39,7 @@ public:
     void chargerChannels();
     void envoyerAuServeur(Paquet&);
     void envoyerAuChannel(Paquet&, Channel*);
+    void changerChannel(Client*, Channel*);
 
     //Handlers des opCodes reçus.
     void handleServerSide(Paquet*, Client*);

@@ -29,8 +29,8 @@ public:
     QString getCreatedBy() { return m_createdBy; }
     QList<Client *> getClients() { return m_users; }
     bool isDefault() { return m_defaultChannel; }
-    bool deleteWhenEmpty() { return m_deleteWhenEmpty; }
-    void setDeleteWhenEmpty(bool deleteWhenEmpty) { m_deleteWhenEmpty = deleteWhenEmpty; }
+    bool isPersistant() { return m_persistant; }
+    void setPersistant(bool persistant) { m_persistant = persistant; }
 
 signals:
     void console(QString);
@@ -45,7 +45,7 @@ protected:
     quint8 m_reqLevel;
     QString m_password;
     QString m_createdBy;
-    bool m_deleteWhenEmpty;
+    bool m_persistant;
     bool m_defaultChannel;
 
     QList<Client *> m_users;
